@@ -14,7 +14,7 @@ class Noeud:
    
    nom = ""
    
-   #Position)
+   #Position
    pos = []
    r = 0
    
@@ -95,13 +95,6 @@ def generePoints(nombre):
     for i in range (nombre):
         x = random.randint(0,taille[0])
         y = random.randint(0,taille[1])
-        """voisins = []
-        n = random.randint(1,len(Points))
-        
-        
-        for v in range(len(Points)):
-            if random.randint(0,1):
-                voisins.append()"""
         point = Noeud("P"+str(i),x,y,-20,[])
 
 
