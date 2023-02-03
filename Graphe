@@ -147,5 +147,5 @@ font = pygame.font.SysFont('Arial', 24, True, False)
 generePoints(100)
 
 
-
+#Test
 Affiche(Points,Segments)
