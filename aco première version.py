@@ -3,6 +3,7 @@
 import pygame
 import math
 import random
+from GrapheSettings import *
 
 
 #===Classes===
