@@ -6,6 +6,6 @@ Display = {
     "Points.nom" : True,
 
     "Segments" : True,
-    "Segments.long" : True
+    "Segments.long" : False
 
 }
