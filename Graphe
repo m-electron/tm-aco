@@ -33,19 +33,21 @@ class Noeud:
         for noeud in self.voisins:
             cote = Vertice(self,noeud)
             self.cotes.append(cote)
-            noeud.voisins.append(self)
+            # noeud.voisins.append(self)
             Segments.append(cote)
         Points.append(self)     
 
+      def ajoute_voisin(self, liste):
+        global Segments
+        self.voisins += liste
+        for v in liste:
+            Segments.append(Vertice(self, v))
+
    def __repr__(self):
-        affiche_voisins = ""
-        i = 0    #index pour l'affichage des virgules entre les voisins
-        for v in self.voisins:
-            affiche_voisins += str(v.pos)
-            i += 1
-            if i < len(self.voisins):
-                affiche_voisins += ', '
         return f"{self.nom}({self.pos})"
+   
+   def delete(self):
+        Points.remove(self)
 
 #-----Côtés-----
 
@@ -57,12 +59,15 @@ class Vertice:
     
     long = 0
     
+    nom = ""
+    
     def __init__(self,noeud1,noeud2):
         self.ext = [noeud1,noeud2]
         self.long = math.sqrt((self.ext[0].pos[0]-self.ext[1].pos[0])**2 + (self.ext[0].pos[1]-self.ext[1].pos[1])**2)
+        self.nom = noeud1.nom + '_' + noeud2.nom
         
     def __repr__(self):
-        return f"|Vertice| Extrémités : {self.ext[0]}, {self.ext[1]}"
+        return f"{self.nom}"
 
 
 #===Fonctions===
@@ -70,32 +75,116 @@ class Vertice:
 #-----Affichage de Pygame sur l'ecran-----
 
 def Affiche(points,segments):
-    global noeud1 #debug
     continuer = True
     couleur_fond = BLANC
     while continuer:
         
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                continuer = False
+        
         screen.fill(couleur_fond)
+        
         for fig in segments:
-            pygame.draw.line(screen, ROUGE, fig.ext[0].pos, fig.ext[1].pos, 7)
-            longueur = font.render(str(int(fig.long)), True, NOIR)
-            screen.blit(longueur, [(fig.ext[0].pos[0]+fig.ext[1].pos[0])/2,(fig.ext[0].pos[1]+fig.ext[1].pos[1])/2])
+            if Display["Segments"]:
+                pygame.draw.line(screen, ROUGE, fig.ext[0].pos, fig.ext[1].pos, 5)
+            if Display["Segments.long"]:
+                longueur = font.render(str(int(fig.long)), True, NOIR)
+                screen.blit(longueur, [(fig.ext[0].pos[0]+fig.ext[1].pos[0])/2,(fig.ext[0].pos[1]+fig.ext[1].pos[1])/2])
+
         for fig in points:
-            pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
-            nomPoint = font.render(fig.nom, True, NOIR)
-            screen.blit(nomPoint, [fig.pos[0]+fig.r,fig.pos[1]])
+            if Display["Points"]:
+                pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
+            if Display["Points.nom"]:
+                nomPoint = font.render(fig.nom, True, NOIR)
+                screen.blit(nomPoint, [fig.pos[0]+fig.r,fig.pos[1]])
         
         pygame.display.flip()
-    
+        clock.tick(10)
+        
     pygame.quit()
 
 #-----Génération de points-----
+
 def generePoints(nombre):
     global Points, taille
+    Points_temp = []
     for i in range (nombre):
-        x = random.randint(0,taille[0])
-        y = random.randint(0,taille[1])
-        point = Noeud("P"+str(i),x,y,-20,[])
+        while True:
+           x = random.randint(0,taille[0])
+           y = random.randint(0,taille[1])
+           Points_temp.append(point_temp)
+           break
+   for temp in Points_temp:
+        Points.remove(temp)
+        point = Noeud("P"+str(Points_temp.index(temp)), temp.pos[0], temp.pos[1], -20, PointsProches(temp, Points, 3, 0))
+        Points.append(point)
+
+#-----Points les plus proches selon un axe-----
+
+def PointsProches(Point,liste, n, d):   # Points proches sur l'axe d
+    if d == '&':
+        return PointsProches(Point,liste, n, 0) + PointsProches(Point,liste, n, 1)
+    if type(Point) == Noeud:
+        coos = Point.pos
+    PtsProches = []
+    for p in liste:
+        if p != Point:
+            if len(PtsProches) == 0:    #Donne une valeur initiale à la liste 'PtsProches'
+                PtsProches = [p]
+            else:
+                if PlusProche(d, Point, p, PtsProches[-1]) == p:     #p plus proche de 'Point' que tous les points dans 'PtsProches'
+                    PtsProches.append(p)
+                    if len(PtsProches) > n:
+                        PtsProches.pop(0)
+                else:
+                    for i in PtsProches:
+                        if PlusProche(d, Point, p, i) == i:         #p plus éloigné qu'un des points de 'PtsProches'
+                            if len(PtsProches) < n:
+                                PtsProches.insert(PtsProches.index(i),p)    #On ajoute p à cet emplacement dans 'PtsProches'
+                                break
+                            elif i != 0:
+                                PtsProches.insert(PtsProches.index(i),p)    #On ajoute p à cet emplacement dans 'PtsProches'
+                                PtsProches.pop(0)                           #Comme 'PtsProches' contient déjà le max de points recherchés (n), on enlève le plus grand
+                                break
+    return PtsProches
+
+#-----Points les plus proches dans le plan-----
+
+def PtsProches2D(Point, liste, n):    # Cherche les n points les plus proches de 'Point'
+    Point = Point.pos
+    # Pas garder : Proches = PointsProches(Point, liste, n, 0) + PointsProches(Point, liste, n, 1)
+    coos = {'0' : [], '1' : []}
+    for i in range (1): # i est l'axe
+        pts_proches = PointsProches(Point, liste, n, i)
+        croissant = PointsProches([0,0], pts_proches, n, i) # Met les points de pts_proches dans l'ordre croissant selon l'axe i
+        coos[str(i)] = [croissant[0], croissant[-1]]
+    return [coos['0'][0], coos['0'][1], coos['1'][0], coos['1'][1]]
+
+    # for i in :
+        
+
+
+    
+    # Idée : Je prends le point proche en x le plus à gauche, puis le plus à droite, puis la même chose en y
+    # pour obtenir un rectangle avec les min et max en x et y. Les n points les plus proches de 'Point' sont
+    # forcément dans ce rectangle. J'utilise 'PointsProches' avec la fonction dist pour trouver les plus proches.
+    
+    return pts_proches
+
+#-----Point le plus proche parmi deux candidats-----
+
+def PlusProche(i, Point, A, B):    # Vérifie quel point entre A et B est le plus proche de Point en coordonnée i
+    # print(f"{Point.pos[0]=}")
+    diff = math.copysign(1, abs(A.pos[i] - Point.pos[i]) - abs(B.pos[i] - Point.pos[i]))
+    if diff == 1: return B   # B plus proche
+    else: return A           # A plus proche
+
+#-----Distance entre deux points-----
+
+def dist(A, B):
+    distance = math.sqrt((A.pos[0]-B.pos[0])**2 + (A.pos[1]-B.pos[1])**2)
+    return distance
 
 
 #===Constantes couleurs===
@@ -130,6 +219,7 @@ taille = (1000, 700)
 pygame.init()
 pygame.display.set_caption(' Graphe')
 screen = pygame.display.set_mode(taille)
+clock = pygame.time.Clock()
 
 #-----Texte-----
 
@@ -137,7 +227,7 @@ font = pygame.font.SysFont('Arial', 24, True, False)
 
 #-----Affichage-----
 
-generePoints(100)
+generePoints(20)
 
 
 Affiche(Points,Segments)
