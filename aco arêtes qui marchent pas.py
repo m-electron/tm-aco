@@ -81,9 +81,7 @@ def Affiche(points,segments):
         
         screen.fill(couleur_fond)
         for fig in segments:
-            pygame.draw.line(screen, ROUGE, fig.ext[0].pos, fig.ext[1].pos, 7)
-            longueur = font.render(str(int(fig.long)), True, NOIR)
-            screen.blit(longueur, [(fig.ext[0].pos[0]+fig.ext[1].pos[0])/2,(fig.ext[0].pos[1]+fig.ext[1].pos[1])/2])
+            pygame.draw.line(screen, ROUGE, (fig[1].pos[0], fig[1].pos[1]), (fig[2].pos[0], fig[2].pos[1]), 2)
         for fig in points:
             pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
             nomPoint = font.render(fig.nom, True, NOIR)
@@ -113,11 +111,11 @@ def generePoints(nombre):
 
        
 def trouvevoisins():
-    global taille, Points, nombre
-    voisin1 = (1000, 0, 0)
-    voisin2 = (1000, 0, 0)
-    voisin3 = (1000, 0, 0)
+    global Points, nombre, Segments
     for i in Points:
+        voisin1 = (1000, 0, 0)
+        voisin2 = (1000, 0, 0)
+        voisin3 = (1000, 0, 0)
         for j in Points:
             if i != j:
                 hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
@@ -130,16 +128,35 @@ def trouvevoisins():
                     voisin2 = (hypotenuse, i, j)
                 elif hypotenuse < voisin3[0]:
                     voisin3 = (hypotenuse, i, j)
-                    
-        print((voisin1[1].pos[0], voisin1[1].pos[1]))
-        print((voisin1[2].pos[0], voisin1[2].pos[1]))
-        
-        pygame.draw.line(screen, ROUGE, (50, 200), (500, 700), 5)
-        
-        pygame.draw.line(screen, ROUGE, [voisin1[1].pos[0], voisin1[1].pos[1]], [voisin1[2].pos[0], voisin1[2].pos[1]])
-        #pygame.draw.line(screen, ROUGE, voisin2[1].pos, voisin2[2].pos)
-        #pygame.draw.line(screen, ROUGE, voisin3[1].pos, voisin3[2].pos)
 
+            
+        présence =  False
+        for k in Segments:
+            if k == voisin1:
+                présence = True
+                break
+        if présence == False:
+            Segments.append(voisin1)
+                
+                
+        présence =  False
+        for k in Segments:
+            if k == voisin2:
+                présence = True
+                break
+        if présence == False:
+            Segments.append(voisin2)
+            
+                
+        présence =  False
+        for k in Segments:
+            if k == voisin3:
+                présence = True
+                break
+        if présence == False:
+            Segments.append(voisin3)
+    
+    Segments.pop(0)
 
 #===Constantes couleurs===
 
@@ -185,7 +202,6 @@ font = pygame.font.SysFont('Arial', 24, True, False)
     
 generePoints(20)
 
-Affiche(Points,Segments)
-
 trouvevoisins()
-    
+
+Affiche(Points,Segments)
