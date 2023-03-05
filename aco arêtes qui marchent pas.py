@@ -95,6 +95,7 @@ def Affiche(points,segments):
     pygame.quit()
 
 #-----Génération de points-----
+
 def generePoints(nombre):
     global Points, taille
     for i in range (nombre):
@@ -108,28 +109,36 @@ def generePoints(nombre):
             if random.randint(0,1):
                 voisins.append()"""
         point = Noeud("P"+str(i),x,y,-20,[])
+
+
        
 def trouvevoisins():
-    global taille, Points
+    global taille, Points, nombre
+    voisin1 = (1000, 0, 0)
+    voisin2 = (1000, 0, 0)
+    voisin3 = (1000, 0, 0)
     for i in Points:
-        for j in Points - i :
-            voisin1 = (taille, 0, 0)
-            voisin2 = (taille, 0, 0)
-            voisin3 = (taille, 0, 0)
-            hypotenuse = math.sqrt((abs(i.pos[0] - j.pos[0]))**2 + (abs(i.pos[1] - j.pos[1])**2))
-            if hypotenuse < voisin1[0]:
-                voisin2 = voisin1
-                voisin3 = voisin2
-                voisin1 = (hypotenuse, i, j)
-            elif hypotenuse < voisin2[0]:
-                voisin3 = voisin2
-                voisin2 = (hypotenuse, i, j)
-            elif hypotenuse < voisin3[0]:
-                voisin3 = (hypotenuse, i, j)
-                
-        pygame.draw.line(screen, ROUGE, voisin1[1].pos, voisin1[2].pos)
-        pygame.draw.line(screen, ROUGE, voisin2[1].pos, voisin2[2].pos)
-        pygame.draw.line(screen, ROUGE, voisin3[1].pos, voisin3[2].pos)
+        for j in Points:
+            if i != j:
+                hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
+                if hypotenuse < voisin1[0]:
+                    voisin2 = voisin1
+                    voisin3 = voisin2
+                    voisin1 = (hypotenuse, i, j)
+                elif hypotenuse < voisin2[0]:
+                    voisin3 = voisin2
+                    voisin2 = (hypotenuse, i, j)
+                elif hypotenuse < voisin3[0]:
+                    voisin3 = (hypotenuse, i, j)
+                    
+        print((voisin1[1].pos[0], voisin1[1].pos[1]))
+        print((voisin1[2].pos[0], voisin1[2].pos[1]))
+        
+        pygame.draw.line(screen, ROUGE, (50, 200), (500, 700), 5)
+        
+        pygame.draw.line(screen, ROUGE, [voisin1[1].pos[0], voisin1[1].pos[1]], [voisin1[2].pos[0], voisin1[2].pos[1]])
+        #pygame.draw.line(screen, ROUGE, voisin2[1].pos, voisin2[2].pos)
+        #pygame.draw.line(screen, ROUGE, voisin3[1].pos, voisin3[2].pos)
 
 
 #===Constantes couleurs===
@@ -171,12 +180,12 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont('Arial', 24, True, False)
 
 #-----Affichage-----
-    
-trouvevoisins()
+
+#trouvevoisins()
     
 generePoints(20)
 
 Affiche(Points,Segments)
 
-
+trouvevoisins()
     
