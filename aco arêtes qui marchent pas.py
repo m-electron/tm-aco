@@ -89,7 +89,7 @@ def Affiche(points,segments):
         
         screen.fill(couleur_fond)
         for fig in segments:
-            pygame.draw.line(screen, ROUGE, (fig[1].pos[0], fig[1].pos[1]), (fig[2].pos[0], fig[2].pos[1]), 2)
+            pygame.draw.line(screen, ROUGE, fig.ext[0].pos, fig.ext[1].pos, 2)
         for fig in points:
             pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
             nomPoint = font.render(fig.nom, True, NOIR)
