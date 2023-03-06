@@ -10,22 +10,22 @@ import random
 #-----Noeuds-----
 
 class Noeud:
-   global Points
+    global Points
    
-   nom = ""
+    nom = ""
    
-   #Position)
-   pos = []
-   r = 0
+    #Position)
+    pos = []
+    r = 0
    
-   #Voisins
-   voisins = []
+    #Voisins
+    voisins = []
    
-   #Côtés
-   cotes = []
+    #Côtés
+    cotes = []
     
-   def __init__(self,nom,x,y,taille,adjacents):    
-   #taille est une valeur entre 0 et 100 qui donne le rayon entre 10 et 50.
+    def __init__(self,nom,x,y,taille,adjacents):    
+    #taille est une valeur entre 0 et 100 qui donne le rayon entre 10 et 50.
         self.nom = nom
         self.pos = [x,y]
         self.r = 10 + taille*25/100
@@ -37,14 +37,18 @@ class Noeud:
             Segments.append(cote)
         Points.append(self)     
 
-   def __repr__(self):
-        affiche_voisins = ""
-        i = 0    #index pour l'affichage des virgules entre les voisins
-        for v in self.voisins:
-            affiche_voisins += str(v.pos)
-            i += 1
-            if i < len(self.voisins):
-                affiche_voisins += ', '
+    def ajoute_voisin(self, liste):  # Modif CV
+        if self in liste: return
+        global Segments
+        for i in liste:
+            if i in self.voisins:
+                liste.pop(liste.index(i))
+        self.voisins += liste
+        for v in liste:
+            if v not in Segments:
+                Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2))) # Modif CV
+      
+    def __repr__(self):
         return f"{self.nom}({self.pos})"
 
 #-----Côtés-----
@@ -56,13 +60,17 @@ class Vertice:
     ext = []
     
     long = 0
+   
+    nom = "vertice anonyme"
     
-    def __init__(self,noeud1,noeud2):
+    def __init__(self,noeud1,noeud2, hypotenuse):
         self.ext = [noeud1,noeud2]
-        self.long = math.sqrt((self.ext[0].pos[0]-self.ext[1].pos[0])**2 + (self.ext[0].pos[1]-self.ext[1].pos[1])**2)
+        self.long = hypotenuse
+        if type(noeud1) == Noeud and type(noeud2) == Noeud:
+            self.nom = noeud1.nom + '_' + noeud2.nom
         
     def __repr__(self):
-        return f"|Vertice| Extrémités : {self.ext[0]}, {self.ext[1]}"
+       return f"{self.nom}"
 
 
 #===Fonctions===
@@ -113,21 +121,22 @@ def generePoints(nombre):
 def trouvevoisins():
     global Points, nombre, Segments
     for i in Points:
-        voisin1 = (1000, 0, 0)
-        voisin2 = (1000, 0, 0)
-        voisin3 = (1000, 0, 0)
+        diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
+        voisin1 = Vertice(0, 0, diagonale_plan)
+        voisin2 = Vertice(0, 0, diagonale_plan)
+        voisin3 = Vertice(0, 0, diagonale_plan)
         for j in Points:
             if i != j:
                 hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
-                if hypotenuse < voisin1[0]:
+                if hypotenuse < voisin1.long:
                     voisin2 = voisin1
                     voisin3 = voisin2
-                    voisin1 = (hypotenuse, i, j)
-                elif hypotenuse < voisin2[0]:
+                    voisin1 = Vertice(i, j, hypotenuse)
+                elif hypotenuse < voisin2.long:
                     voisin3 = voisin2
-                    voisin2 = (hypotenuse, i, j)
-                elif hypotenuse < voisin3[0]:
-                    voisin3 = (hypotenuse, i, j)
+                    voisin2 = Vertice(i, j, hypotenuse)
+                elif hypotenuse < voisin3.long:
+                    voisin3 = Vertice(i, j, hypotenuse)
 
             
         présence =  False
@@ -137,7 +146,7 @@ def trouvevoisins():
                 break
         if présence == False:
             Segments.append(voisin1)
-                
+            voisin1.ext[0].ajoute_voisin([voisin1.ext[1]])
                 
         présence =  False
         for k in Segments:
@@ -146,7 +155,7 @@ def trouvevoisins():
                 break
         if présence == False:
             Segments.append(voisin2)
-            
+            voisin2.ext[0].ajoute_voisin([voisin2.ext[1]])
                 
         présence =  False
         for k in Segments:
@@ -155,9 +164,24 @@ def trouvevoisins():
                 break
         if présence == False:
             Segments.append(voisin3)
-    
+            voisin3.ext[0].ajoute_voisin([voisin3.ext[1]])
+ 
     Segments.pop(0)
 
+#-----Création d'un document txt contenant le graphe-----
+
+def export_graphe(Graphe):  # Graphe = [Points, Segments]
+    content = ''
+    for point in Graphe[0]:
+        declaration = f'Noeud({point.nom}, {point.pos[0]}, {point.pos[1]}, {(point.r - 10)*4}, {point.voisins})'
+        content += declaration + '\n'
+    for segment in Graphe[1]:
+        declaration = f'Vertice({segment.ext[0]}, {segment.ext[1]}, {segment.long})'
+        content += declaration + '\n'
+    with open('Graphe_File.txt', 'w') as file:
+        file.write(content)
+ 
+ 
 #===Constantes couleurs===
 
 BLANC = (255,255,255)
@@ -203,5 +227,7 @@ font = pygame.font.SysFont('Arial', 24, True, False)
 generePoints(20)
 
 trouvevoisins()
+
+export_graphe([Points, Segments])
 
 Affiche(Points,Segments)
