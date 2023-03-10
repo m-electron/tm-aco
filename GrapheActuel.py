@@ -24,7 +24,7 @@ class Noeud:
     #Côtés
     cotes = []
     
-    def __init__(self,nom,x,y,taille,adjacents):    
+    def __init__(self,nom: str, x: int or float , y: int or float, taille: int or float, adjacents: list):    
     #taille est une valeur entre 0 et 100 qui donne le rayon entre 10 et 50.
         self.nom = nom
         self.pos = [x,y]
@@ -37,16 +37,18 @@ class Noeud:
             Segments.append(cote)
         Points.append(self)     
 
-    def ajoute_voisin(self, liste):  # Modif CV
-        if self in liste: return
+    def ajoute_voisin(self, liste: list):
+        # if self in liste: return      # À quoi sert cette ligne ? CV
+        if self in liste:
+            liste.pop(liste.index(self))    # On enlève 'self' des voisins à ajouter
         global Segments
         for i in liste:
             if i in self.voisins:
-                liste.pop(liste.index(i))
+                liste.pop(liste.index(i))   # On enlève de 'liste' les voisins déjà existants
         self.voisins += liste
         for v in liste:
-            if v not in Segments:
-                Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2))) # Modif CV
+            v.voisins.append(self)
+            Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2)))
       
     def __repr__(self):
         return f"{self.nom}({self.pos})"
@@ -75,9 +77,27 @@ class Vertice:
 
 #===Fonctions===
 
+#-----Fonction d'exécution du programme-----
+
+def execute():
+    global Points, Segments, nombre_points
+
+    while True:
+        
+        generePoints(nombre_points)
+
+        trouvevoisins(Points)
+
+        if cherche_iles(Points):
+            break
+
+    export_graphe([Points, Segments])
+
+    Affiche(Points, Segments)
+
 #-----Affichage de Pygame sur l'ecran-----
 
-def Affiche(points,segments):
+def Affiche(points: list, segments: list):
     global noeud1 #debug
     continuer = True
     couleur_fond = BLANC
@@ -102,7 +122,7 @@ def Affiche(points,segments):
 
 #-----Génération de points-----
 
-def generePoints(nombre):
+def generePoints(nombre: int):
     global Points, taille
     for i in range (nombre):
         x = random.randint(10,taille[0]-10)
@@ -111,9 +131,9 @@ def generePoints(nombre):
 
 
        
-def trouvevoisins():
-    global Points, Segments
-        diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
+def trouvevoisins(Points: list):
+    global Segments
+    diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
     for i in Points:
         voisin1 = Vertice(0, 0, diagonale_plan)
         voisin2 = Vertice(0, 0, diagonale_plan)
@@ -161,9 +181,19 @@ def trouvevoisins():
  
     Segments.pop(0)
 
+def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, puis les voisins de voisins etc. et regarde si tous les points sont dedans.
+    reseau = noeuds[0].voisins # Réseau de points liés, liste
+    for v in reseau:
+        for elmt in v.voisins:  # elmt est voisin d'un point de 'reseau'     elmt pour 'élément' si jamais
+            if elmt not in reseau:
+                reseau.append(elmt)
+    if len(reseau) == len(noeuds):  # S'il y a tous les points du graphe dans 'reseau' c'est bon --> True
+        return True
+    else: return False
+
 #-----Création d'un document txt contenant le graphe-----
 
-def export_graphe(Graphe):  # Graphe = [Points, Segments]
+def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
     content = ''
     for point in Graphe[0]:
         declaration = f'Noeud({point.nom}, {point.pos[0]}, {point.pos[1]}, {(point.r - 10)*4}, {point.voisins})'
@@ -196,6 +226,7 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
+nombre_points = 20
 
 #-----Affichage-----
 
@@ -214,13 +245,5 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont('Arial', 24, True, False)
 
 #-----Affichage-----
-
-#trouvevoisins()
     
-generePoints(20)
-
-trouvevoisins()
-
-export_graphe([Points, Segments])
-
-Affiche(Points,Segments)
+execute()
