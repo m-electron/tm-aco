@@ -107,21 +107,14 @@ def generePoints(nombre):
     for i in range (nombre):
         x = random.randint(10,taille[0]-10)
         y = random.randint(10,taille[1]-10)
-        """voisins = []
-        n = random.randint(1,len(Points))
-        
-        
-        for v in range(len(Points)):
-            if random.randint(0,1):
-                voisins.append()"""
         point = Noeud("P"+str(i),x,y,-20,[])
 
 
        
 def trouvevoisins():
-    global Points, nombre, Segments
-    for i in Points:
+    global Points, Segments
         diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
+    for i in Points:
         voisin1 = Vertice(0, 0, diagonale_plan)
         voisin2 = Vertice(0, 0, diagonale_plan)
         voisin3 = Vertice(0, 0, diagonale_plan)
@@ -129,8 +122,8 @@ def trouvevoisins():
             if i != j:
                 hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
                 if hypotenuse < voisin1.long:
-                    voisin2 = voisin1
                     voisin3 = voisin2
+                    voisin2 = voisin1
                     voisin1 = Vertice(i, j, hypotenuse)
                 elif hypotenuse < voisin2.long:
                     voisin3 = voisin2
@@ -139,30 +132,30 @@ def trouvevoisins():
                     voisin3 = Vertice(i, j, hypotenuse)
 
             
-        présence =  False
+        présence1 = présence2 = présence3 = False
+        sortie = 0  # Sortir de a boucle si c'est inutile de continuer
         for k in Segments:
             if k == voisin1:
-                présence = True
+                présence1 = True
+                sortie += 1
+            if k == voisin2:
+                présence2 = True
+                sortie += 1
+            if k == voisin2:
+                présence3 = True
+                sortie += 1
+            if sortie == 3: # Les trois points sont déjà présents, pas nécessaire de continuer à itérer
                 break
-        if présence == False:
+
+        if présence1 == False:
             Segments.append(voisin1)
             voisin1.ext[0].ajoute_voisin([voisin1.ext[1]])
-                
-        présence =  False
-        for k in Segments:
-            if k == voisin2:
-                présence = True
-                break
-        if présence == False:
+        
+        if présence2 == False:
             Segments.append(voisin2)
             voisin2.ext[0].ajoute_voisin([voisin2.ext[1]])
                 
-        présence =  False
-        for k in Segments:
-            if k == voisin3:
-                présence = True
-                break
-        if présence == False:
+        if présence3 == False:
             Segments.append(voisin3)
             voisin3.ext[0].ajoute_voisin([voisin3.ext[1]])
  
