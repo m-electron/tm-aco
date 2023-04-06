@@ -31,10 +31,10 @@ class Noeud:
         self.r = 10 + taille*25/100
         self.voisins = adjacents
         for noeud in self.voisins:
-            cote = Vertice(self,noeud)
+            cote = Edge(self,noeud)
             self.cotes.append(cote)
             noeud.voisins.append(self)
-            Segments.append(cote)
+            Segments[str(cote.nom)] = cote
         Points.append(self)     
 
     def ajoute_voisin(self, liste: list):
@@ -48,14 +48,14 @@ class Noeud:
         self.voisins += liste
         for v in liste:
             v.voisins.append(self)
-            Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2)))
+            Segments[make_name_from_vars([self, v], '_')] = Edge(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2))
       
     def __repr__(self):
         return f"{self.nom}({self.pos})"
 
 #-----Côtés-----
 
-class Vertice:
+class Edge:
     global Segments
     
     #Extrémités (list)
@@ -63,7 +63,7 @@ class Vertice:
     
     long = 0
    
-    nom = "vertice anonyme"
+    nom = "Edge anonyme"
     
     def __init__(self,noeud1,noeud2, hypotenuse):
         self.ext = [noeud1,noeud2]
@@ -108,7 +108,7 @@ def Affiche(points: list, segments: list):
                 continuer = False
         
         screen.fill(couleur_fond)
-        for fig in segments:
+        for key, fig in segments.items():
             pygame.draw.line(screen, ROUGE, fig.ext[0].pos, fig.ext[1].pos, 2)
         for fig in points:
             pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
@@ -129,32 +129,31 @@ def generePoints(nombre: int):
         y = random.randint(10,taille[1]-10)
         point = Noeud("P"+str(i),x,y,-20,[])
 
-
        
 def trouvevoisins(Points: list):
     global Segments
     diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
     for i in Points:
-        voisin1 = Vertice(0, 0, diagonale_plan)
-        voisin2 = Vertice(0, 0, diagonale_plan)
-        voisin3 = Vertice(0, 0, diagonale_plan)
+        voisin1 = Edge(0, 0, diagonale_plan)
+        voisin2 = Edge(0, 0, diagonale_plan)
+        voisin3 = Edge(0, 0, diagonale_plan)
         for j in Points:
             if i != j:
                 hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
                 if hypotenuse < voisin1.long:
                     voisin3 = voisin2
                     voisin2 = voisin1
-                    voisin1 = Vertice(i, j, hypotenuse)
+                    voisin1 = Edge(i, j, hypotenuse)
                 elif hypotenuse < voisin2.long:
                     voisin3 = voisin2
-                    voisin2 = Vertice(i, j, hypotenuse)
+                    voisin2 = Edge(i, j, hypotenuse)
                 elif hypotenuse < voisin3.long:
-                    voisin3 = Vertice(i, j, hypotenuse)
+                    voisin3 = Edge(i, j, hypotenuse)
 
             
         présence1 = présence2 = présence3 = False
         sortie = 0  # Sortir de a boucle si c'est inutile de continuer
-        for k in Segments:
+        for _, k in Segments.items():
             if k == voisin1:
                 présence1 = True
                 sortie += 1
@@ -167,21 +166,29 @@ def trouvevoisins(Points: list):
             if sortie == 3: # Les trois points sont déjà présents, pas nécessaire de continuer à itérer
                 break
 
+        nom1 = make_name_from_vars([voisin1.ext[0], voisin1.ext[1]], '_')
+        nom2 = make_name_from_vars([voisin2.ext[0], voisin2.ext[1]], '_')
+        nom3 = make_name_from_vars([voisin3.ext[0], voisin3.ext[1]], '_')
+
         if présence1 == False:
-            Segments.append(voisin1)
+            Segments[nom1] = voisin1
             voisin1.ext[0].ajoute_voisin([voisin1.ext[1]])
         
         if présence2 == False:
-            Segments.append(voisin2)
+            Segments[nom2] = voisin2
             voisin2.ext[0].ajoute_voisin([voisin2.ext[1]])
                 
         if présence3 == False:
-            Segments.append(voisin3)
+            Segments[nom3] = voisin3
             voisin3.ext[0].ajoute_voisin([voisin3.ext[1]])
  
-    Segments.pop(0)
+    for key in list(Segments):
+        Segments.pop(key)
+        break
 
-def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, puis les voisins de voisins etc. et regarde si tous les points sont dedans.
+
+# Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, puis les voisins de voisins etc. et regarde si tous les points sont dedans.
+def cherche_iles(noeuds: list):
     reseau = noeuds[0].voisins # Réseau de points liés, liste
     for v in reseau:
         for elmt in v.voisins:  # elmt est voisin d'un point de 'reseau'     elmt pour 'élément' si jamais
@@ -198,13 +205,23 @@ def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
     for point in Graphe[0]:
         declaration = f'Noeud({point.nom}, {point.pos[0]}, {point.pos[1]}, {(point.r - 10)*4}, {point.voisins})'
         content += declaration + '\n'
-    for segment in Graphe[1]:
-        declaration = f'Vertice({segment.ext[0]}, {segment.ext[1]}, {segment.long})'
+    for key, segment in Graphe[1].items():
+        declaration = f'Edge({segment.ext[0]}, {segment.ext[1]}, {segment.long})'
         content += declaration + '\n'
     with open('Graphe_File.txt', 'w') as file:
         file.write(content)
  
- 
+#-----Créer des noms sous forme de str à partir de variables-----
+
+def make_name_from_vars(vars: list, separator: str):    # Utile p. ex. pour donner des noms aux éléments de dictionnaires, comme 'Segments'
+    name = ''
+    for index, elmt in enumerate(vars):
+        name += str(elmt.nom)
+        if index < len(vars) - 1:
+            name += separator
+    return name
+
+
 #===Constantes couleurs===
 
 BLANC = (255,255,255)
@@ -225,7 +242,7 @@ ORANGE = (199,95,48)
 #-----Graphe-----
 
 Points = []
-Segments = []
+Segments = {}
 nombre_points = 20
 
 #-----Affichage-----
