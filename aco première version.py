@@ -3,6 +3,7 @@
 import pygame
 import math
 import random
+import time
 
 
 #===Classes===
@@ -48,7 +49,7 @@ class Noeud:
         self.voisins += liste
         for v in liste:
             v.voisins.append(self)
-            Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2)))
+            Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2), 10))
       
     def __repr__(self):
         return f"{self.nom}({self.pos})"
@@ -65,11 +66,12 @@ class Vertice:
    
     nom = "vertice anonyme"
     
-    fer = 0
+    fer = 10
     
-    def __init__(self,noeud1,noeud2, hypotenuse):
+    def __init__(self,noeud1,noeud2, hypotenuse, feromone):
         self.ext = [noeud1,noeud2]
         self.long = hypotenuse
+        self.fer = feromone
         if type(noeud1) == Noeud and type(noeud2) == Noeud:
             self.nom = noeud1.nom + '_' + noeud2.nom
         
@@ -79,14 +81,21 @@ class Vertice:
 #-----Fourmis-----
     
 class Fourmis:
+    global Points
     
     nom = ""
     
     pos = []
     
-    def __init__(self,nom , Points):
+    point = 0
+    
+    chem = []
+    
+    def __init__(self,nom , pos, Points, chemin):
         self.nom = nom
-        self.pos = Points
+        self.pos = pos
+        self.point = Points
+        self.chem = chemin
         
     def __repr__(self):
        return f"{self.nom, self.pos}"
@@ -94,16 +103,32 @@ class Fourmis:
 #===Fonctions===
 
 #-----fonctionnement des fourmis-----
-def mouv_fourmis(nombre: int):
-    global Points, listfourmis, Segments
+def cree_fourmis(nombre: int):
+    global Points, listfourmis
     
     listfourmis = []
     for i in range (0, nombre):
-        listfourmis.append(Fourmis("F"+str(i), Points[0].pos))
+        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
+       
+def mouve_fourmis():
+    global Segments, listfourmis, Points
+     
+    for i in listfourmis:
+        voisins = []
+        somme_fer = 0
+        index = 0
+        for j in Segments:
+            if j.ext[0] == i.point:
+                somme_fer += j.fer
+                for k in range(0, j.fer):
+                    voisins.append(j)
         
-    #for i in Segments
-    
-    #print(listfourmis)
+        i.chem.append(j)
+        index = voisins[random.randint(0, somme_fer - 1)].ext[1]
+        i.pos = index.pos
+        i.point = index
+        #print(voisins[random.randint(0, somme_fer - 1)].pos)
+
 
 #-----Fonction d'exécution du programme-----
 
@@ -118,19 +143,25 @@ def execute():
 
         if cherche_iles(Points):
             break
-    mouv_fourmis(10)
+    cree_fourmis(5)
     
     export_graphe([Points, Segments])
     
+    #print(Points[0].voisins)
+    
+    frame = 0
     continuer = True
     while continuer:
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 continuer = False
-
-            Affiche(Points, Segments)
             
+        frame += 1
+        Affiche(Points, Segments, listfourmis)
+            
+        if frame % 10 == 0:
+            mouve_fourmis()
             
         pygame.display.flip()
         clock.tick(10)
@@ -139,8 +170,8 @@ def execute():
 
 #-----Affichage de Pygame sur l'ecran-----
 
-def Affiche(points: list, segments: list):
-    global noeud1, listfourmis #debug
+def Affiche(points: list, segments: list, lisfourmis: list):
+    global noeud1 #debug
     couleur_fond = BLANC
         
     screen.fill(couleur_fond)
@@ -169,21 +200,21 @@ def trouvevoisins(Points: list):
     global Segments
     diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
     for i in Points:
-        voisin1 = Vertice(0, 0, diagonale_plan)
-        voisin2 = Vertice(0, 0, diagonale_plan)
-        voisin3 = Vertice(0, 0, diagonale_plan)
+        voisin1 = Vertice(0, 0, diagonale_plan, 10)
+        voisin2 = Vertice(0, 0, diagonale_plan, 10)
+        voisin3 = Vertice(0, 0, diagonale_plan, 10)
         for j in Points:
             if i != j:
                 hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
                 if hypotenuse < voisin1.long:
                     voisin3 = voisin2
                     voisin2 = voisin1
-                    voisin1 = Vertice(i, j, hypotenuse)
+                    voisin1 = Vertice(i, j, hypotenuse, 10)
                 elif hypotenuse < voisin2.long:
                     voisin3 = voisin2
-                    voisin2 = Vertice(i, j, hypotenuse)
+                    voisin2 = Vertice(i, j, hypotenuse, 10)
                 elif hypotenuse < voisin3.long:
-                    voisin3 = Vertice(i, j, hypotenuse)
+                    voisin3 = Vertice(i, j, hypotenuse, 10)
 
             
         présence1 = présence2 = présence3 = False
@@ -195,7 +226,7 @@ def trouvevoisins(Points: list):
             if k == voisin2:
                 présence2 = True
                 sortie += 1
-            if k == voisin2:
+            if k == voisin3:
                 présence3 = True
                 sortie += 1
             if sortie == 3: # Les trois points sont déjà présents, pas nécessaire de continuer à itérer
@@ -212,8 +243,14 @@ def trouvevoisins(Points: list):
         if présence3 == False:
             Segments.append(voisin3)
             voisin3.ext[0].ajoute_voisin([voisin3.ext[1]])
- 
-    Segments.pop(0)
+    
+    element = 0
+    for a in Segments:
+        for z in Segments:
+            if a == z:
+                del(Segments[element])
+                break
+        element += 1
 
 def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, puis les voisins de voisins etc. et regarde si tous les points sont dedans.
     reseau = noeuds[0].voisins # Réseau de points liés, liste
@@ -264,7 +301,7 @@ nombre_points = 8
 
 #-----Affichage-----
 
-taille = (1000, 700)
+taille = (700, 400)
 
 
 #===Exécution===
@@ -281,6 +318,3 @@ font = pygame.font.SysFont('Arial', 24, True, False)
 #-----Affichage-----
     
 execute()
-
-print(Points[0].voisins)
-print(Segments)
