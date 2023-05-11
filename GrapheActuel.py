@@ -170,6 +170,9 @@ def execute():
         if cherche_iles(Points):
             break
 
+        Points = []
+        Segments = {}
+
     for i in Points:
         if Points[0] not in i.voisins: 
             Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
