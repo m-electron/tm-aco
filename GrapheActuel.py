@@ -1,8 +1,6 @@
 #===Imports===
 
-import pygame
-import math
-import random
+import pygame, math, random, time
 
 #===Classes===
 
@@ -127,7 +125,7 @@ def Dijkstra(start: Noeud, target: Noeud):
         pt = closest_point[0]
 
         if target in resolus.keys():
-            print('Trajet optimal trouvé')
+            print('Trajet optimal trouvé : ', end = '')
 
             route = [target]
             pt = target
@@ -145,8 +143,6 @@ def Dijkstra(start: Noeud, target: Noeud):
                     for i, p in enumerate(route[:-1]):
                         shortest_path.append(make_name_from_vars([p, route[i+1]], '_'))
                         shortest_path.append(make_name_from_vars([route[i+1], p], '_'))
-
-                    #shortest_path.append(make_name_from_vars([resolus[elmt][1], elmt], '_'))
                     
                     return route
     
@@ -161,24 +157,44 @@ def Dijkstra(start: Noeud, target: Noeud):
 def execute():
     global Points, Segments, nombre_points, trajet
 
+    t1 = t2 = None
+    iterations = 0
+
+    t0 = time.time()
     while True:
 
         generePoints(nombre_points)
+        iterations += 1
 
+        t1 = time.time()
         trouvevoisins(Points)
+        t2 = time.time()
 
+        
         if cherche_iles(Points):
             break
 
         Points = []
         Segments = {}
+    t3 = time.time()
 
     for i in Points:
         if Points[0] not in i.voisins: 
             Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
     Points[0].voisins.pop(Points[0].voisins.index(Points[0]))
 
+    match iterations:
+        case 1 : print(f'{iterations} graphe a été généré.')
+        case n if n > 1: print(f'{iterations} graphes ont été générés.')
+
+    t4 = time.time()
     Dijkstra(Points[trajet[0]], Points[trajet[1]])
+    t5 = time.time()
+
+    print(f'--------------------\nTemps de génération du graphe : {t3-t0}')
+    print(f'Temps de recherche de voisins : {t2-t1}')
+    print(f'Temps de calcul de l\'itinéraire optimal : {t5-t4}')
+    print(f'Temps total : {t5-t0}')
 
     export_graphe([Points, Segments])
 
@@ -192,10 +208,14 @@ def Affiche(points: list, segments: list):
     couleurs = {
         'fond': CREME,
         'segments': BLEU,
-        'segments courts': ROUGE,
+        'optimal': ROUGE,
         'points': BLEU,
         'noms': NOIR
     }
+
+    points_chemin = []  # On va afficher les points du chemin court de la même couleur
+    for i in shortest_path:
+        points_chemin += i.split('_')
 
     while continuer:
 
@@ -210,12 +230,16 @@ def Affiche(points: list, segments: list):
             if key in shortest_path:    # Les segments du chemin le plus court seront affichés par-dessus les autres
                 segments_courts.append(key)
                 continue
-            pygame.draw.line(screen, couleurs['segments'], fig.ext[0].pos, fig.ext[1].pos, 2)
+            pygame.draw.line(screen, couleurs['segments'], fig.ext[0].pos, fig.ext[1].pos, 2) 
         for key in segments_courts:
-            pygame.draw.line(screen, couleurs['segments courts'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
+            pygame.draw.line(screen, couleurs['optimal'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
         for fig in points:
-            pygame.draw.circle(screen, couleurs['points'], fig.pos, fig.r)
-            nomPoint = font.render(fig.nom, True, couleurs['noms'])
+            if fig.nom in points_chemin:
+                pygame.draw.circle(screen, couleurs['optimal'], fig.pos, fig.r)
+                nomPoint = font.render(fig.nom, True, couleurs['optimal'])
+            else :
+                pygame.draw.circle(screen, couleurs['points'], fig.pos, fig.r)
+                nomPoint = font.render(fig.nom, True, couleurs['noms'])
             screen.blit(nomPoint, [fig.pos[0]+fig.r, fig.pos[1]])
 
         pygame.display.flip()
@@ -361,7 +385,7 @@ CREME = (237, 225, 220)
 Points = []
 Segments = {}
 shortest_path = []
-nombre_points = 20
+nombre_points = 150
 trajet = (0, nombre_points-1)   # L'index des points de départ et d'arrivée
 
 #-----Affichage-----
