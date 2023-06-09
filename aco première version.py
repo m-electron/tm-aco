@@ -3,7 +3,6 @@
 import pygame
 import math
 import random
-import time
 
 
 #===Classes===
@@ -117,23 +116,31 @@ def mouve_fourmis():
         voisins = []
         somme_fer = 0
         index = 0
+        verif = True
         for j in Segments:
-            if j.ext[0] == i.point:
+            
+            verif = True
+#             if j in i.chem:
+                
+            if len(i.chem) > 0:
+                if j.ext[0] in i.chem[-1].ext and j.ext[1] in i.chem[-1].ext:
+                    break
+            
+            if verif == True and j.ext[0] == i.point:
                 somme_fer += j.fer
                 for k in range(0, j.fer):
                     voisins.append(j)
         
-        i.chem.append(j)
-        index = voisins[random.randint(0, somme_fer - 1)].ext[1]
-        i.pos = index.pos
-        i.point = index
-        #print(voisins[random.randint(0, somme_fer - 1)].pos)
-
+        index = voisins[random.randint(0, somme_fer - 1)]
+        i.chem.append(index)
+        i.pos = index.ext[1].pos
+        i.point = index.ext[1]
+    print(listfourmis[0].chem)
 
 #-----Fonction d'exécution du programme-----
 
 def execute():
-    global Points, Segments, nombre_points
+    global Points, Segments, nombre_points, listfourmis
 
     while True:
         
@@ -143,14 +150,17 @@ def execute():
 
         if cherche_iles(Points):
             break
-    cree_fourmis(5)
+    cree_fourmis(1)
     
     export_graphe([Points, Segments])
     
-    #print(Points[0].voisins)
+    print(Segments)
+    #print(invers_segment(Segments[0]))
+    print(Segments[0].ext)
     
     frame = 0
     continuer = True
+    cnt = 2
     while continuer:
         
         for event in pygame.event.get():
@@ -160,11 +170,12 @@ def execute():
         frame += 1
         Affiche(Points, Segments, listfourmis)
             
-        if frame % 10 == 0:
-            mouve_fourmis()
-            
+        #if frame % 10 == 0:
+            #mouve_fourmis()
+            #print(cnt,"-- ",listfourmis[0].chem)
         pygame.display.flip()
         clock.tick(10)
+        cnt -= 1
         
     pygame.quit()
 
@@ -261,6 +272,17 @@ def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choi
     if len(reseau) == len(noeuds):  # S'il y a tous les points du graphe dans 'reseau' c'est bon --> True
         return True
     else: return False
+
+def invers_segment(obj: Vertice):
+    global Segments
+    for i in Segments:
+        print(Vertice.ext, i.ext)
+        if Vertice.ext[0] == i.ext[1] and Vertice.ext[1] == i.ext[0]:
+            x = i
+            break
+        else:
+            print("problème")
+    return x
 
 #-----Création d'un document txt contenant le graphe-----
 
