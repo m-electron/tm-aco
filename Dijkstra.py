@@ -50,7 +50,7 @@ class Noeud:
             Segments[make_name_from_vars([self, v], '_')] = Edge(self, v, pythagore(self, v))
 
     def __repr__(self):
-        return f"{self.nom}({self.pos})"
+        return self.nom   # f"{self.nom}({self.pos})"
 
 #-----Côtés-----
 
@@ -131,7 +131,7 @@ def Dijkstra(start: Noeud, target: Noeud):
             pt = target
 
             while True:
-                route.insert(0, resolus[pt][1])
+                route.insert(0, resolus[pt][1]) # On ajoute au début de la liste de tuples-points le nouveau point
                 pt = resolus[pt][1]
                 if pt == start:
                     for i, e in enumerate(route): 
@@ -152,6 +152,74 @@ def Dijkstra(start: Noeud, target: Noeud):
     # puis on ajoute les tuples de ses voisins à candidats.
     # Le plus petit candidat devient résolu et c'est le nouveau point P pour l'itération n+1
 
+def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, trajets_complets = False):
+    # La variable 'trajets_complets' permet de choisir parmis les options suivantes:
+    # False (défaut) : Le programme calcule 'iterations' chemins différents sans prendre en compte combien atteignent l'arrivée (renvoie une erreur si aucun n'atteint l'arrivée);
+    # True : Le programme calcule des chemins jusqu'à-ce que qu'il y en ait 'iterations' qui atteignent l'arrivée.
+
+    global shortest_random_path
+
+    start_time = time.time()
+
+    calculated_paths = {}
+
+    repetitions = iterations
+
+    if trajets_complets: 
+        completes = iterations # completes représente les trajets déja complétés atteignant l'arrivée
+        iterations = 1
+
+    loop = True
+    while loop:
+
+        current_point = start
+        next_point = None
+
+        visited_points = []
+        
+        while current_point != target:
+            visited_points.append(current_point)
+            # print(f'{visited_points=}')
+            possible_points = [point for point in current_point.voisins if point not in visited_points]
+            try :
+                n = random.randint(0, len(possible_points) - 1)
+            except:
+                break
+            next_point = possible_points[n]
+            # print(next_point)
+            current_point = next_point
+        
+        if current_point == target: 
+            visited_points.append(current_point)
+            calculated_paths[l:=longueur_chemin(visited_points)] = tuple(visited_points)
+            # print("Point d'arrivée atteint. Longueur =", l)
+            if trajets_complets:
+                completes -= 1
+        
+        repetitions -= 1
+
+        if trajets_complets: 
+            iterations += 1
+            if completes == 0:
+                break
+        elif repetitions == 0: break
+            
+    print(f"{iterations} trajets ont été testés. {len(calculated_paths)} atteignent le point d'arrivée.")
+    # Si on demande que 1000 trajets atteignent l'arrivée mais que le programme affiche : "870 atteignent le point d'arrivée", 
+    # c'est parce que 130 trajets ont déjà été trouvés. Donc 1000 trajets l'atteignent mais 130 sont présents plusieurs fois et pas comptabilisés.
+    assert len(calculated_paths) != 0, "Aucun trajet n'atteint l'arrivée."
+    min_length = min(list(calculated_paths.keys()))
+
+    end_time = time.time()
+
+    shortest_random_path = (min_path:=calculated_paths[min_length])
+
+    print('Longueur min :', min_length)
+    print('Chemin optimal :', min_path)
+    print("Temps d'éxécution :", end_time - start_time)
+    
+    pass
+
 #-----Fonction d'exécution du programme-----
 
 def execute():
@@ -161,6 +229,7 @@ def execute():
     iterations = 0
 
     t0 = time.time()
+    
     while True:
 
         generePoints(nombre_points)
@@ -188,13 +257,17 @@ def execute():
         case n if n > 1: print(f'{iterations} graphes ont été générés.')
 
     t4 = time.time()
+    print('\nDijkstra :')
     Dijkstra(Points[trajet[0]], Points[trajet[1]])
     t5 = time.time()
-
-    print(f'--------------------\nTemps de génération du graphe : {t3-t0}')
+    
+    print(f'------------------------------\nTemps de génération du graphe : {t3-t0}')
     print(f'Temps de recherche de voisins : {t2-t1}')
     print(f'Temps de calcul de l\'itinéraire optimal : {t5-t4}')
     print(f'Temps total : {t5-t0}')
+
+    print('\nMéthode aléatoire :')
+    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], 100, True)
 
     export_graphe([Points, Segments])
 
@@ -203,12 +276,13 @@ def execute():
 #-----Affichage de Pygame sur l'ecran-----
 
 def Affiche(points: list, segments: list):
-    global shortest_path
+    global shortest_path, shortest_random_path
     continuer = True
     couleurs = {
-        'fond': CREME,
+        'fond': BLANC,
         'segments': BLEU,
-        'optimal': ROUGE,
+        'chemin optimal': ROUGE,
+        'chemin optimal aléatoire': VERT,
         'points': BLEU,
         'noms': NOIR
     }
@@ -228,15 +302,19 @@ def Affiche(points: list, segments: list):
         segments_courts = []    # Les segments du chemin le plus court seront affichés par-dessus les autres
         for key, fig in segments.items():
             if key in shortest_path:    # Les segments du chemin le plus court seront affichés par-dessus les autres
-                segments_courts.append(key)
-                continue
-            pygame.draw.line(screen, couleurs['segments'], fig.ext[0].pos, fig.ext[1].pos, 2) 
-        for key in segments_courts:
-            pygame.draw.line(screen, couleurs['optimal'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
+                pygame.draw.line(screen, couleurs['chemin optimal'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
+            else:
+                pygame.draw.line(screen, couleurs['segments'], fig.ext[0].pos, fig.ext[1].pos, 2) 
+
+        segments_courts_methode_aleatoire = [pt for pt in points if pt in shortest_random_path]
+
         for fig in points:
             if fig.nom in points_chemin:
-                pygame.draw.circle(screen, couleurs['optimal'], fig.pos, fig.r)
-                nomPoint = font.render(fig.nom, True, couleurs['optimal'])
+                pygame.draw.circle(screen, couleurs['chemin optimal'], fig.pos, fig.r)
+                nomPoint = font.render(fig.nom, True, couleurs['chemin optimal'])
+            elif fig in segments_courts_methode_aleatoire:
+                pygame.draw.circle(screen, couleurs['chemin optimal aléatoire'], fig.pos, fig.r)
+                nomPoint = font.render(fig.nom, True, couleurs['noms'])
             else :
                 pygame.draw.circle(screen, couleurs['points'], fig.pos, fig.r)
                 nomPoint = font.render(fig.nom, True, couleurs['noms'])
@@ -356,6 +434,15 @@ def longueur_segment(p1, p2):
         long = Segments[make_name_from_vars([p2, p1], '_')].long
     return long
 
+def longueur_chemin(route: list):
+    long = 0
+    dernier_point = None
+    for point in route:
+        if dernier_point != None:
+            long += longueur_segment(dernier_point, point)
+        dernier_point = point
+    return long
+
 #-----Calcule la distance entredeux points avec pythagore-----
 def pythagore(p1, p2):
     return math.sqrt((p1.pos[0] - p2.pos[0])**2 + (p1.pos[1] - p2.pos[1])**2)
@@ -385,6 +472,7 @@ CREME = (237, 225, 220)
 Points = []
 Segments = {}
 shortest_path = []
+shortest_random_path = set()
 nombre_points = 150
 trajet = (0, nombre_points-1)   # L'index des points de départ et d'arrivée
 
