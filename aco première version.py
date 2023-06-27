@@ -107,7 +107,7 @@ def cree_fourmis(nombre: int):
     
     listfourmis = []
     for i in range (0, nombre):
-        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
+        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], [Points[0]]))
        
 def mouve_fourmis():
     global Segments, listfourmis, Points
@@ -116,26 +116,24 @@ def mouve_fourmis():
         voisins = []
         somme_fer = 0
         index = 0
-        verif = True
         for j in Segments:
-            
-            verif = True
-#             if j in i.chem:
-                
+            """
             if len(i.chem) > 0:
-                if j.ext[0] in i.chem[-1].ext and j.ext[1] in i.chem[-1].ext:
+                if j.ext[1] != i.chem[-1]:
                     break
+            """
             
-            if verif == True and j.ext[0] == i.point:
+            if j.ext[0] == i.point and j.ext[1] != i.chem[-1]:
                 somme_fer += j.fer
+                print(j)
                 for k in range(0, j.fer):
                     voisins.append(j)
         
         index = voisins[random.randint(0, somme_fer - 1)]
-        i.chem.append(index)
+        i.chem.append(index.ext[1])
         i.pos = index.ext[1].pos
         i.point = index.ext[1]
-    print(listfourmis[0].chem)
+        print(10 * "_")
 
 #-----Fonction d'exécution du programme-----
 
@@ -153,10 +151,7 @@ def execute():
     cree_fourmis(1)
     
     export_graphe([Points, Segments])
-    
-    print(Segments)
-    #print(invers_segment(Segments[0]))
-    print(Segments[0].ext)
+
     
     frame = 0
     continuer = True
@@ -170,8 +165,8 @@ def execute():
         frame += 1
         Affiche(Points, Segments, listfourmis)
             
-        #if frame % 10 == 0:
-            #mouve_fourmis()
+        if frame % 10 == 0:
+            mouve_fourmis()
             #print(cnt,"-- ",listfourmis[0].chem)
         pygame.display.flip()
         clock.tick(10)
@@ -273,6 +268,7 @@ def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choi
         return True
     else: return False
 
+"""
 def invers_segment(obj: Vertice):
     global Segments
     for i in Segments:
@@ -283,6 +279,7 @@ def invers_segment(obj: Vertice):
         else:
             print("problème")
     return x
+"""
 
 #-----Création d'un document txt contenant le graphe-----
 
