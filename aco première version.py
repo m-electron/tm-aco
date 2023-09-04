@@ -18,24 +18,32 @@ class Noeud:
     pos = []
     r = 0
    
-    #Voisins
+    #jsp pourquoi c'est là mais ça marche
     voisins = []
+    
+    #Segments adjacents
+    seg = []
    
     #Côtés
     cotes = []
     
-    def __init__(self,nom: str, x: int or float , y: int or float, taille: int or float, adjacents: list):    
+    def __init__(self,nom: str, x: int or float , y: int or float, taille: int or float, adjacents: list, segments):    
     #taille est une valeur entre 0 et 100 qui donne le rayon entre 10 et 50.
+        global Segments
         self.nom = nom
         self.pos = [x,y]
         self.r = 10 + taille*25/100
         self.voisins = adjacents
+        self.seg = segments
+
+
         for noeud in self.voisins:
             cote = Vertice(self,noeud)
             self.cotes.append(cote)
             noeud.voisins.append(self)
-            Segments.append(cote)
-        Points.append(self)     
+            Segments.append(cote)        
+        Points.append(self)
+        
 
     def ajoute_voisin(self, liste: list):
         # if self in liste: return      # À quoi sert cette ligne ? CV
@@ -49,6 +57,7 @@ class Noeud:
         for v in liste:
             v.voisins.append(self)
             Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2), 10))
+            
       
     def __repr__(self):
         return f"{self.nom}({self.pos})"
@@ -67,7 +76,7 @@ class Vertice:
     
     fer = 10
     
-    def __init__(self,noeud1,noeud2, hypotenuse, feromone):
+    def __init__(self,noeud1,noeud2, hypotenuse, feromone: int):
         self.ext = [noeud1,noeud2]
         self.long = hypotenuse
         self.fer = feromone
@@ -107,34 +116,79 @@ def cree_fourmis(nombre: int):
     
     listfourmis = []
     for i in range (0, nombre):
-        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], [Points[0]]))
-       
+        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
+      
 def mouve_fourmis():
     global Segments, listfourmis, Points
-     
+    
+    chem_possible = []
+    
     for i in listfourmis:
-        voisins = []
-        somme_fer = 0
-        index = 0
-        for j in Segments:
-            """
-            if len(i.chem) > 0:
-                if j.ext[1] != i.chem[-1]:
-                    break
-            """
-            
-            if j.ext[0] == i.point and j.ext[1] != i.chem[-1]:
-                somme_fer += j.fer
-                print(j)
-                for k in range(0, j.fer):
-                    voisins.append(j)
         
-        index = voisins[random.randint(0, somme_fer - 1)]
-        i.chem.append(index.ext[1])
-        i.pos = index.ext[1].pos
-        i.point = index.ext[1]
-        print(10 * "_")
-
+        if i.point == Points[-1]:
+            longeur_chemin = 0
+            somme_fer = 0
+            for h in i.chem:
+                longeur_chemin += h.long
+            for h in i.chem:
+                h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 50) / longeur_chemin * h.long)
+                somme_fer += h.fer
+            
+            if i.chem not in chem_possible:
+                chem_possible.append(i.chem)
+            
+            best_chem = 0
+            
+            if somme_fer / longeur_chemin > 5:
+                for l in chem_possible:
+                    for m in l
+                
+            i.chem = []
+            i.pos = Points[0].pos
+            i.point = Points[0]
+            
+            
+        else:
+            somme_fer = 0
+            liste_segments = []
+            for j in i.point.seg:
+                if j not in i.chem:
+                    somme_fer += j.fer
+                    liste_segments.append((somme_fer, j))
+            
+            nombre_alea = 0
+            nombre_alea = random.uniform(0, somme_fer - 1)
+            seg_emprunté = Segments[0]
+            
+            
+            #print(liste_segments)
+            
+            for k in liste_segments:
+                if nombre_alea < k[0]:
+                    seg_emprunté = k[1]
+                    break
+            
+            if seg_emprunté.ext[0] == i.point:
+                if seg_emprunté.ext[1] == Points[0]:
+                    i.chem = []
+                    
+                i.chem.append(seg_emprunté)
+                i.pos = seg_emprunté.ext[1].pos
+                i.point = seg_emprunté.ext[1]
+                
+            elif seg_emprunté.ext[1] == i.point:
+                if seg_emprunté.ext[0] == Points[0]:
+                    i.chem = []
+                    
+                i.chem.append(seg_emprunté)
+                i.pos = seg_emprunté.ext[0].pos
+                i.point = seg_emprunté.ext[0]
+            
+            else:
+                i.pos = Points[0].pos
+                i.point = Points[0]
+        
+        
 #-----Fonction d'exécution du programme-----
 
 def execute():
@@ -148,10 +202,15 @@ def execute():
 
         if cherche_iles(Points):
             break
-    cree_fourmis(1)
+    cree_fourmis(10)
     
     export_graphe([Points, Segments])
+    
+    netoyer_segment()
+    
+    Segments_adjasents()
 
+    #print(Points[0].seg)
     
     frame = 0
     continuer = True
@@ -164,10 +223,11 @@ def execute():
             
         frame += 1
         Affiche(Points, Segments, listfourmis)
-            
+   
         if frame % 10 == 0:
             mouve_fourmis()
             #print(cnt,"-- ",listfourmis[0].chem)
+
         pygame.display.flip()
         clock.tick(10)
         cnt -= 1
@@ -198,7 +258,7 @@ def generePoints(nombre: int):
     for i in range (nombre):
         x = random.randint(10,taille[0]-10)
         y = random.randint(10,taille[1]-10)
-        point = Noeud("P"+str(i),x,y,-20,[])
+        point = Noeud("P"+str(i),x,y,-20,[],[])
 
 
        
@@ -249,6 +309,7 @@ def trouvevoisins(Points: list):
         if présence3 == False:
             Segments.append(voisin3)
             voisin3.ext[0].ajoute_voisin([voisin3.ext[1]])
+            
     
     element = 0
     for a in Segments:
@@ -257,6 +318,8 @@ def trouvevoisins(Points: list):
                 del(Segments[element])
                 break
         element += 1
+        
+        
 
 def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, puis les voisins de voisins etc. et regarde si tous les points sont dedans.
     reseau = noeuds[0].voisins # Réseau de points liés, liste
@@ -268,18 +331,23 @@ def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choi
         return True
     else: return False
 
-"""
-def invers_segment(obj: Vertice):
+
+def netoyer_segment():
     global Segments
     for i in Segments:
-        print(Vertice.ext, i.ext)
-        if Vertice.ext[0] == i.ext[1] and Vertice.ext[1] == i.ext[0]:
-            x = i
-            break
-        else:
-            print("problème")
-    return x
-"""
+        for j in Segments:
+            if i.ext[0] == j.ext[1] and i.ext[1] == j.ext[0]:
+                Segments.remove(j)
+
+
+def Segments_adjasents():
+    global Segments, Points
+    for l in Points:
+        for m in Segments:
+            if l in m.ext:
+                l.seg.append(m)
+
+
 
 #-----Création d'un document txt contenant le graphe-----
 
