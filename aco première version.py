@@ -137,12 +137,20 @@ def mouve_fourmis():
             if i.chem not in chem_possible:
                 chem_possible.append(i.chem)
             
-            best_chem = 0
+            best_chem = (0, 0)
+            
             
             if somme_fer / longeur_chemin > 5:
                 for l in chem_possible:
-                    for m in l
-                
+                    somme_fer_final = 0
+                    longeur_tot =0
+                    for m in l:
+                        somme_fer_final += m.fer
+                        longeur_tot += m.long
+                    if best_chem[1] < somme_fer / longeur_chemin:
+                        best_chem = (l, somme_fer / longeur_chemin)
+                print(best_chem)
+
             i.chem = []
             i.pos = Points[0].pos
             i.point = Points[0]
