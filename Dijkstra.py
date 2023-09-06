@@ -1,6 +1,7 @@
 #===Imports===
 
-import pygame, math, random, time
+import pygame, math, random, time, csv
+# from FonctionsUtiles import *
 
 #===Classes===
 
@@ -28,7 +29,7 @@ class Noeud:
         self.r = taille
         self.voisins = adjacents
         for noeud in self.voisins:
-            cote = Edge(self, noeud, pythagore(self, noeud))
+            cote = Arete(self, noeud, pythagore(self, noeud))
             self.cotes.append(cote)
             noeud.voisins.append(self)
             Segments[str(cote.nom)] = cote
@@ -47,14 +48,14 @@ class Noeud:
         self.voisins += liste
         for v in liste:
             v.voisins.append(self)
-            Segments[make_name_from_vars([self, v], '_')] = Edge(self, v, pythagore(self, v))
+            Segments[make_name_from_vars([self, v], '_')] = Arete(self, v, pythagore(self, v))
 
     def __repr__(self):
         return self.nom   # f"{self.nom}({self.pos})"
 
 #-----Côtés-----
 
-class Edge:
+class Arete:
     global Segments
 
     # Extrémités (list)
@@ -223,54 +224,60 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, trajets_comp
 #-----Fonction d'exécution du programme-----
 
 def execute():
-    global Points, Segments, nombre_points, trajet
+    global Points, Segments, nombre_points, trajet, iterations_aleatoires, trajets_aleatoires_complets, mode_copie, adresse
 
     t1 = t2 = None
     iterations = 0
 
     t0 = time.time()
     
-    while True:
+    if mode_copie != 'copie':
+        while True:
 
-        generePoints(nombre_points)
-        iterations += 1
+            generePoints(nombre_points)
+            iterations += 1
 
-        t1 = time.time()
-        trouvevoisins(Points)
-        t2 = time.time()
+            t1 = time.time()
+            trouvevoisins(Points)
+            t2 = time.time()
 
-        
-        if cherche_iles(Points):
-            break
+            
+            if cherche_iles(Points):
+                break
 
-        Points = []
-        Segments = {}
-    t3 = time.time()
+            Points = []
+            Segments = {}
 
-    for i in Points:
-        if Points[0] not in i.voisins: 
-            Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
-    Points[0].voisins.pop(Points[0].voisins.index(Points[0]))
+        t3 = time.time()
 
-    match iterations:
-        case 1 : print(f'{iterations} graphe a été généré.')
-        case n if n > 1: print(f'{iterations} graphes ont été générés.')
+        for i in Points:
+            if Points[0] not in i.voisins: 
+                Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
+        Points[0].voisins.pop(Points[0].voisins.index(Points[0]))
 
+        match iterations:
+            case 1 : print(f'{iterations} graphe a été généré.')
+            case n if n > 1: print(f'{iterations} graphes ont été générés.')
+
+        print(f'------------------------------\nTemps de génération du graphe : {t3-t0}')
+        print(f'Temps de recherche de voisins : {t2-t1}')
+
+    else:
+        copie_graphe([], [], 'copie', adresse)
+    
     t4 = time.time()
     print('\nDijkstra :')
     Dijkstra(Points[trajet[0]], Points[trajet[1]])
     t5 = time.time()
     
-    print(f'------------------------------\nTemps de génération du graphe : {t3-t0}')
-    print(f'Temps de recherche de voisins : {t2-t1}')
     print(f'Temps de calcul de l\'itinéraire optimal : {t5-t4}')
     print(f'Temps total : {t5-t0}')
 
     print('\nMéthode aléatoire :')
-    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], 100, True)
+    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], iterations_aleatoires, trajets_aleatoires_complets)
 
-    export_graphe([Points, Segments])
-
+    copie_graphe(Points, Segments, 'sauvegarde')
+ 
     Affiche(Points, Segments)
 
 #-----Affichage de Pygame sur l'ecran-----
@@ -338,21 +345,21 @@ def trouvevoisins(Points: list):
     global Segments
     diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
     for i in Points:
-        voisin1 = Edge(0, 0, diagonale_plan)
-        voisin2 = Edge(0, 0, diagonale_plan)
-        voisin3 = Edge(0, 0, diagonale_plan)
+        voisin1 = Arete(0, 0, diagonale_plan)
+        voisin2 = Arete(0, 0, diagonale_plan)
+        voisin3 = Arete(0, 0, diagonale_plan)
         for j in Points:
             if i != j:
                 hypotenuse = pythagore(i,j)
                 if hypotenuse < voisin1.long:
                     voisin3 = voisin2
                     voisin2 = voisin1
-                    voisin1 = Edge(i, j, hypotenuse)
+                    voisin1 = Arete(i, j, hypotenuse)
                 elif hypotenuse < voisin2.long:
                     voisin3 = voisin2
-                    voisin2 = Edge(i, j, hypotenuse)
+                    voisin2 = Arete(i, j, hypotenuse)
                 elif hypotenuse < voisin3.long:
-                    voisin3 = Edge(i, j, hypotenuse)
+                    voisin3 = Arete(i, j, hypotenuse)
 
         présence1 = présence2 = présence3 = False
         sortie = 0  # Sortir de la boucle si c'est inutile de continuer
@@ -403,7 +410,7 @@ def cherche_iles(noeuds: list):
 
 #-----Création d'un document txt contenant le graphe-----
 
-def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
+""" def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
     content = ''
     for point in Graphe[0]:
         declaration = f'Noeud({point.nom}, {point.pos[0]}, {point.pos[1]}, {point.r}, {point.voisins})'
@@ -413,6 +420,47 @@ def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
         content += declaration + '\n'
     with open('Graphe_File.txt', 'w') as file:
         file.write(content)
+ """
+
+def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'Graphe_File.csv'):    # mode: 'sauvegarde'/'copie'
+    if mode == 'sauvegarde':
+        texte = []
+        for point in liste_points:
+            texte.append(['P', point.nom, point.pos, point.r, []])
+        for key in liste_aretes:
+            texte.append(['A', liste_aretes[key].ext, liste_aretes[key].long])
+
+        with open(adresse, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['SEP=,'])    # Permet d'ouvrir le fichier csv dans excel en séparant les données en colonnes
+            for row in texte:
+                writer.writerow(row)
+
+    elif mode == 'copie':
+        global Points, Segments
+        Points = []
+        Segments = {}
+
+        with open(adresse, 'r') as f:
+            texte = list(csv.reader(f, delimiter=","))
+        
+        index = 0
+        for line in texte:
+            match line[0]:
+                case 'P':
+                    Points.append(Noeud(line[1], eval(line[2])[0], eval(line[2])[1], int(line[3]), []))
+                    Points.pop()
+                    #print(f'Noeud({line[1]}, {eval(line[2])[0]}, {eval(line[2])[1]}, {line[3]}, [])')
+                    index = int(line[1].replace('P',''))
+                case 'A':
+                    ext = list(line[1][1:-1].split(', '))
+                    name = str(ext[0]) + '_' + str(ext[1])
+                    point_numbers = [int(ext[0].replace('P', '')), int(ext[1].replace('P', ''))]
+                    Segments[name] = Arete(Points[point_numbers[0]], Points[point_numbers[1]], eval(line[2]))
+                    Points[point_numbers[0]].voisins.append(Points[point_numbers[1]])
+                    Points[point_numbers[1]].voisins.append(Points[point_numbers[0]])
+
+    pass
 
 #-----Créer des noms sous forme de str à partir de variables-----
 
@@ -423,6 +471,17 @@ def make_name_from_vars(vars: list, separator: str):    # Utile p. ex. pour donn
         if index < len(vars) - 1:
             name += separator
     return name
+
+""" #-----Calcule la longueur d'un segment entre deux points-----
+def longueur_segment(p1, p2):
+    global Segments
+    long = 0
+    if make_name_from_vars([p1, p2], '_') in Segments:
+        long = Segments[make_name_from_vars([p1, p2], '_')].long
+    elif make_name_from_vars([p2, p1], '_') in Segments:
+        long = Segments[make_name_from_vars([p2, p1], '_')].long
+    return long
+ """
 
 #-----Calcule la longueur d'un segment entre deux points-----
 def longueur_segment(p1, p2):
@@ -447,6 +506,9 @@ def longueur_chemin(route: list):
 def pythagore(p1, p2):
     return math.sqrt((p1.pos[0] - p2.pos[0])**2 + (p1.pos[1] - p2.pos[1])**2)
 
+def print_array(array, string):
+    for elmt in array: print(elmt)
+
 
 #===Constantes couleurs===
 
@@ -469,12 +531,19 @@ CREME = (237, 225, 220)
 
 #-----Graphe-----
 
+# Variables à ne pas modifier
 Points = []
 Segments = {}
 shortest_path = []
 shortest_random_path = set()
-nombre_points = 150
-trajet = (0, nombre_points-1)   # L'index des points de départ et d'arrivée
+
+# Variables modifiables par l'utilisateur
+nombre_points = 200
+iterations_aleatoires = 50
+trajets_aleatoires_complets = True
+trajet = (0, 1)   # Le point de départ et celui d'arrivée (p. ex: trajet = (0, 100) indique que le point de départ est P0 et celui d'arrivée est P100)
+mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
+adresse = 'Graphe_File.csv'
 
 #-----Affichage-----
 
