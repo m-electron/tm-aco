@@ -119,7 +119,7 @@ def cree_fourmis(nombre: int):
         listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
       
 def mouve_fourmis():
-    global Segments, listfourmis, Points, nombre_fourmis
+    global Segments, listfourmis, Points, nombre_fourmis, fin
     
     chem_possible = []
     
@@ -128,6 +128,7 @@ def mouve_fourmis():
         
         
         if i.point == Points[-1]:
+            """
             longeur_chemin = 0
             somme_fer = 0
             for h in i.chem:
@@ -135,6 +136,13 @@ def mouve_fourmis():
             for h in i.chem:
                 h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 50) / longeur_chemin * h.long)
                 somme_fer += h.fer
+            """
+            somme_fer = 0
+            longeur_chemin = 0
+            for h in i.chem:
+                h.fer += 10
+                somme_fer += h.fer
+                longeur_chemin += h.long
             
             if i.chem not in chem_possible:
                 chem_possible.append(i.chem)
@@ -142,7 +150,8 @@ def mouve_fourmis():
             best_chem = (0, 0)
             
             
-            if somme_fer / longeur_chemin > 5:
+            #if somme_fer / longeur_chemin > 5:
+            if somme_fer / longeur_chemin > 2:
                 for l in chem_possible:
                     somme_fer_final = 0
                     longeur_tot =0
@@ -151,6 +160,8 @@ def mouve_fourmis():
                         longeur_tot += m.long
                     if best_chem[1] < somme_fer / longeur_chemin:
                         best_chem = (l, somme_fer / longeur_chemin)
+                fin = False
+                print(i.chem[0].fer)
                 print(best_chem)
 
             i.chem = []
@@ -236,7 +247,7 @@ def execute():
         Affiche(Points, Segments, listfourmis)
         
         if fin:
-            if frame % 5 == 0:
+            if frame % 1 == 0:
                 mouve_fourmis()
 
         pygame.display.flip()
@@ -253,7 +264,12 @@ def Affiche(points: list, segments: list, lisfourmis: list):
         
     screen.fill(couleur_fond)
     for fig in segments:
-        pygame.draw.line(screen, (225, 225 * fig.fer / 2500, 0), fig.ext[0].pos, fig.ext[1].pos, 2)
+        couleur = 0
+        if couleur < 255:
+            couleur = 255 * fig.fer / 255
+        else:
+            couleur = 255
+        pygame.draw.line(screen, (255, couleur, 0), fig.ext[0].pos, fig.ext[1].pos, 2)
     for fig in points:
         pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
         nomPoint = font.render(fig.nom, True, NOIR)
