@@ -119,11 +119,13 @@ def cree_fourmis(nombre: int):
         listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
       
 def mouve_fourmis():
-    global Segments, listfourmis, Points
+    global Segments, listfourmis, Points, nombre_fourmis
     
     chem_possible = []
     
     for i in listfourmis:
+        #i.point.r -= 1 / nombre_fourmis 
+        
         
         if i.point == Points[-1]:
             longeur_chemin = 0
@@ -195,12 +197,13 @@ def mouve_fourmis():
             else:
                 i.pos = Points[0].pos
                 i.point = Points[0]
+                i.chem = []
         
         
 #-----Fonction d'exécution du programme-----
 
 def execute():
-    global Points, Segments, nombre_points, listfourmis
+    global Points, Segments, nombre_points, listfourmis, fin
 
     while True:
         
@@ -210,7 +213,7 @@ def execute():
 
         if cherche_iles(Points):
             break
-    cree_fourmis(10)
+    cree_fourmis(nombre_fourmis)
     
     export_graphe([Points, Segments])
     
@@ -231,10 +234,10 @@ def execute():
             
         frame += 1
         Affiche(Points, Segments, listfourmis)
-   
-        if frame % 10 == 0:
-            mouve_fourmis()
-            #print(cnt,"-- ",listfourmis[0].chem)
+        
+        if fin:
+            if frame % 5 == 0:
+                mouve_fourmis()
 
         pygame.display.flip()
         clock.tick(10)
@@ -250,7 +253,7 @@ def Affiche(points: list, segments: list, lisfourmis: list):
         
     screen.fill(couleur_fond)
     for fig in segments:
-        pygame.draw.line(screen, ROUGE, fig.ext[0].pos, fig.ext[1].pos, 2)
+        pygame.draw.line(screen, (225, 225 * fig.fer / 2500, 0), fig.ext[0].pos, fig.ext[1].pos, 2)
     for fig in points:
         pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
         nomPoint = font.render(fig.nom, True, NOIR)
@@ -392,7 +395,9 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
-nombre_points = 8
+nombre_points = 20
+nombre_fourmis = 10
+fin = True
 
 #-----Affichage-----
 
