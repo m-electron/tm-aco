@@ -126,7 +126,7 @@ def Dijkstra(start: Noeud, target: Noeud):
         pt = closest_point[0]
 
         if target in resolus.keys():
-            print('Trajet optimal trouvé : ', end = '')
+            # print('Trajet optimal trouvé : ', end = '')
 
             route = [target]
             pt = target
@@ -138,9 +138,9 @@ def Dijkstra(start: Noeud, target: Noeud):
                     for i, e in enumerate(route): 
                         if i < len(route) - 1: a = '-'
                         else: a = ''
-                        print(e.nom, end = a)
+                        # print(e.nom, end = a)
                     shortest_length = resolus[closest_point[0]][0]
-                    print(f'\nLongueur: {shortest_length}')
+                    # print(f'\nLongueur: {shortest_length}')
 
                     for i, p in enumerate(route[:-1]):
                         shortest_path.append(make_name_from_vars([p, route[i+1]], '_'))
@@ -154,11 +154,14 @@ def Dijkstra(start: Noeud, target: Noeud):
     # puis on ajoute les tuples de ses voisins à candidats.
     # Le plus petit candidat devient résolu et c'est le nouveau point P pour l'itération n+1
 
-def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, trajets_complets = 0, x = 50):
-    # La variable 'trajets_complets' permet de choisir parmis les options suivantes:
+def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x = 50):
+    # La variable 'mode' permet de choisir parmis les options suivantes:
     # 0 (défaut) : Le programme calcule 'iterations' chemins différents sans prendre en compte combien atteignent l'arrivée (renvoie une erreur si aucun n'atteint l'arrivée);
     # 1 : Le programme calcule des chemins jusqu'à-ce que qu'il y en ait 'iterations' qui atteignent l'arrivée.
     # 2 : Le programme s'arrête lorsque la longueur minimal aléatoire vaut x% de la vraie longueur optimale
+    # 3 : La méthode aléatoire n'est pas exécutée
+
+    if mode == 3: return None
 
     global shortest_random_path, shortest_length
 
@@ -169,13 +172,6 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, trajets_comp
     repetitions = iterations
 
     completes = iterations
-    
-    # match trajets_complets: 
-    #     case 0: pass
-    #     case 1:
-    #         completes = iterations # completes représente les trajets déja complétés atteignant l'arrivée
-    #         iterations = 1
-    #     case 2: pass
 
     loop = True
     while loop:
@@ -201,21 +197,18 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, trajets_comp
             visited_points.append(current_point)
             calculated_paths[l:=longueur_chemin(visited_points)] = tuple(visited_points)
             # print("Point d'arrivée atteint. Longueur =", l)
-            if trajets_complets == 2 and (l / shortest_length <= 1+x/100):
+            if mode == 2 and (l / shortest_length <= 1+x/100):
                 break
-            if trajets_complets == 1:
+            if mode == 1:
                 completes -= 1
         
-        if trajets_complets != 2:
+        if mode != 2:
             repetitions -= 1
 
-        if trajets_complets in [1,2]: 
+        if mode in [1,2]: 
             iterations += 1
             if completes == 0:
                 break
-        # elif trajets_complets == 2 and 'l' in locals():
-        #     if l / shortest_length <= 1+x/100:
-        #         break
         elif repetitions == 0: break
             
     print(f"{iterations} trajets ont été testés. {len(calculated_paths)} atteignent le point d'arrivée.")
@@ -237,8 +230,12 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, trajets_comp
 #-----Fonction d'exécution du programme-----
 
 def execute():
-    global Points, Segments, nombre_points, trajet, iterations_aleatoires, trajets_aleatoires_complets, precision_longueur, mode_copie, adresse
+    global Points, Segments, nombre_points, trajet, iterations_aleatoires, mode_aleatoire, precision_longueur, mode_copie, adresse
 
+    rapport = [['SEP=,'],
+               ['' ,        'Dijkstra',     '',         'Méthode aléatoire',    '',         '',                 ''              ],
+               ['Mesure',   'Temps [s]',    'Longueur', 'Temps [s]',            'Longueur', 'Rapport distance', 'Rapport temps' ]]    
+    
     t1 = t2 = None
     iterations = 0
 
@@ -278,8 +275,8 @@ def execute():
     else:
         copie_graphe([], [], 'copie', adresse)
     
-    t4 = time.time()
     print('\nDijkstra :')
+    t4 = time.time()
     Dijkstra(Points[trajet[0]], Points[trajet[1]])
     t5 = time.time()
     
@@ -287,9 +284,9 @@ def execute():
     print(f'Temps total : {t5-t0}')
 
     print('\nMéthode aléatoire :')
-    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], iterations_aleatoires, trajets_aleatoires_complets, precision_longueur)
+    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], iterations_aleatoires, mode_aleatoire, precision_longueur)
 
-    copie_graphe(Points, Segments, 'sauvegarde')
+    if mode_copie != 'copie': copie_graphe(Points, Segments, 'sauvegarde', adresse)
  
     Affiche(Points, Segments)
 
@@ -519,7 +516,7 @@ def longueur_chemin(route: list):
 def pythagore(p1, p2):
     return math.sqrt((p1.pos[0] - p2.pos[0])**2 + (p1.pos[1] - p2.pos[1])**2)
 
-def print_array(array, string):
+def print_array(array, _):
     for elmt in array: print(elmt)
 
 
@@ -554,11 +551,11 @@ shortest_length = -1
 # Variables modifiables par l'utilisateur
 nombre_points = 200
 iterations_aleatoires = 100
-trajets_aleatoires_complets = 2
+mode_aleatoire = 2
 precision_longueur = 50   # La différence de longueur max (en %) entre la longueur minimale et la longueur min aléatoire quand le mode aléatoire vaut 2
 trajet = (0, 34)   # Le point de départ et celui d'arrivée (p. ex: trajet = (0, 100) indique que le point de départ est P0 et celui d'arrivée est P100)
 mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
-adresse = 'Graphe_File.csv'
+adresse = 'GrapheFile.csv'
 # Tip : en mettant mode_copie = 'copie' on peut ensuite modifier les points de départ et d'arrivée (trajet) pour recalculer l'itinéraire.
 
 #-----Affichage-----
