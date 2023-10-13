@@ -163,7 +163,7 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x 
 
     if mode == 3: return None
 
-    global shortest_random_path, shortest_length
+    global shortest_random_path, shortest_length, shortest_random_segments
 
     start_time = time.time()
 
@@ -210,6 +210,9 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x 
             if completes == 0:
                 break
         elif repetitions == 0: break
+
+        if iterations % 50000 == 0: print("Calcul en cours, {} trajets ont été calculés.".format(iterations))
+        if iterations % 10**6 == 0: input("Appuyer sur Entrer pour continuer le programme.")
             
     print(f"{iterations} trajets ont été testés. {len(calculated_paths)} atteignent le point d'arrivée.")
     # Si on demande que 1000 trajets atteignent l'arrivée mais que le programme affiche : "870 atteignent le point d'arrivée", 
@@ -220,6 +223,12 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x 
     end_time = time.time()
 
     shortest_random_path = (min_path:=calculated_paths[min_length])
+    for index, node1 in enumerate(shortest_random_path[:-1]):
+        node2 = shortest_random_path[index+1]
+        if  (name:=make_name_from_vars([node1, node2], '_')) in Segments.keys():
+            shortest_random_segments.add(name)
+        elif (name:=make_name_from_vars([node2, node1], '_')) in Segments.keys():
+            shortest_random_segments.add(name)
 
     print('Longueur min :', min_length)
     print('Chemin optimal :', min_path)
@@ -293,10 +302,10 @@ def execute():
 #-----Affichage de Pygame sur l'ecran-----
 
 def Affiche(points: list, segments: list):
-    global shortest_path, shortest_random_path
+    global shortest_path, shortest_random_path, shortest_random_segments
     continuer = True
     couleurs = {
-        'fond': BLANC,
+        'fond': CREME,
         'segments': BLEU,
         'chemin optimal': ROUGE,
         'chemin optimal aléatoire': VERT,
@@ -320,6 +329,8 @@ def Affiche(points: list, segments: list):
         for key, fig in segments.items():
             if key in shortest_path:    # Les segments du chemin le plus court seront affichés par-dessus les autres
                 pygame.draw.line(screen, couleurs['chemin optimal'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
+            elif fig.nom in shortest_random_segments:
+                pygame.draw.line(screen, couleurs['chemin optimal aléatoire'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
             else:
                 pygame.draw.line(screen, couleurs['segments'], fig.ext[0].pos, fig.ext[1].pos, 2) 
 
@@ -405,9 +416,22 @@ def trouvevoisins(Points: list):
     for key in list(Segments):
         Segments.pop(key)
         break
+    
+    # Supprime les segments en double
+    liste_doublons = {}
+    for seg in Segments.values(): 
+        if (name:=make_name_from_vars([seg.ext[1],seg.ext[0]], '_')) in Segments.keys():
+            liste_doublons[seg.nom] = name
+    
+    while len(liste_doublons) > 0:
+        doublon = liste_doublons.popitem()
+        doublon = doublon[1]
+        del Segments[doublon]
+        del liste_doublons[doublon]
 
 
-# Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, puis les voisins de voisins etc. et regarde si tous les points sont dedans.
+# Vérifie si tous les points sont reliés. Choisit un point, puis ses voisins, 
+# puis les voisins de voisins etc. et regarde si tous les points sont dedans.
 def cherche_iles(noeuds: list):
     reseau = noeuds[0].voisins # Réseau de points liés, liste
     for v in reseau:
@@ -420,19 +444,8 @@ def cherche_iles(noeuds: list):
 
 #-----Création d'un document txt contenant le graphe-----
 
-""" def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
-    content = ''
-    for point in Graphe[0]:
-        declaration = f'Noeud({point.nom}, {point.pos[0]}, {point.pos[1]}, {point.r}, {point.voisins})'
-        content += declaration + '\n'
-    for key, segment in Graphe[1].items():
-        declaration = f'Edge({segment.ext[0]}, {segment.ext[1]}, {segment.long})'
-        content += declaration + '\n'
-    with open('Graphe_File.txt', 'w') as file:
-        file.write(content)
- """
-
 def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'Graphe_File.csv'):    # mode: 'sauvegarde'/'copie'
+    
     if mode == 'sauvegarde':
         texte = []
         for point in liste_points:
@@ -447,7 +460,8 @@ def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'G
                 writer.writerow(row)
 
     elif mode == 'copie':
-        global Points, Segments
+        global Points, Segments, trajet
+            
         Points = []
         Segments = {}
 
@@ -469,6 +483,10 @@ def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'G
                     Segments[name] = Arete(Points[point_numbers[0]], Points[point_numbers[1]], eval(line[2]))
                     Points[point_numbers[0]].voisins.append(Points[point_numbers[1]])
                     Points[point_numbers[1]].voisins.append(Points[point_numbers[0]])
+
+    if max(trajet) >= len(Points):
+        assert False, "Le trajet demandé n'est pas compris dans le graphe.\n\
+            Donner des valeurs plus petites aux points de départ et d'arrivée pour regler le problème. "
 
     pass
 
@@ -546,6 +564,7 @@ Points = []
 Segments = {}
 shortest_path = []
 shortest_random_path = set()
+shortest_random_segments = set()
 shortest_length = -1
 
 # Variables modifiables par l'utilisateur
@@ -553,7 +572,7 @@ nombre_points = 200
 iterations_aleatoires = 100
 mode_aleatoire = 2
 precision_longueur = 50   # La différence de longueur max (en %) entre la longueur minimale et la longueur min aléatoire quand le mode aléatoire vaut 2
-trajet = (0, 34)   # Le point de départ et celui d'arrivée (p. ex: trajet = (0, 100) indique que le point de départ est P0 et celui d'arrivée est P100)
+trajet = (0, 1)   # Le point de départ et celui d'arrivée (p. ex: trajet = (0, 100) indique que le point de départ est P0 et celui d'arrivée est P100)
 mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'GrapheFile.csv'
 # Tip : en mettant mode_copie = 'copie' on peut ensuite modifier les points de départ et d'arrivée (trajet) pour recalculer l'itinéraire.
