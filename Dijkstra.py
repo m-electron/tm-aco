@@ -154,7 +154,11 @@ def Dijkstra(start: Noeud, target: Noeud):
     # puis on ajoute les tuples de ses voisins à candidats.
     # Le plus petit candidat devient résolu et c'est le nouveau point P pour l'itération n+1
 
-def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x = 50):
+def methode_aleatoire(start: Noeud, target: Noeud, fonctions):
+    iterations = fonctions['iterations']
+    mode = fonctions['mode']
+    x = fonctions['precision longueur']
+
     # La variable 'mode' permet de choisir parmis les options suivantes:
     # 0 (défaut) : Le programme calcule 'iterations' chemins différents sans prendre en compte combien atteignent l'arrivée (renvoie une erreur si aucun n'atteint l'arrivée);
     # 1 : Le programme calcule des chemins jusqu'à-ce que qu'il y en ait 'iterations' qui atteignent l'arrivée.
@@ -183,20 +187,17 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x 
         
         while current_point != target:
             visited_points.append(current_point)
-            # print(f'{visited_points=}')
             possible_points = [point for point in current_point.voisins if point not in visited_points]
             try :
                 n = random.randint(0, len(possible_points) - 1)
             except:
                 break
             next_point = possible_points[n]
-            # print(next_point)
             current_point = next_point
         
         if current_point == target: 
             visited_points.append(current_point)
             calculated_paths[l:=longueur_chemin(visited_points)] = tuple(visited_points)
-            # print("Point d'arrivée atteint. Longueur =", l)
             if mode == 2 and (l / shortest_length <= 1+x/100):
                 break
             if mode == 1:
@@ -236,10 +237,74 @@ def methode_aleatoire(start: Noeud, target: Noeud, iterations: int, mode = 0, x 
     
     pass
 
+def voyageur_commerce(iterations):
+
+    global Points, Segments, shortest_random_segments_salesman
+    
+    start = Points[0]
+    print(f'{start=}')
+    
+    def genere_1_chemin():
+        current_point = start
+        visited_points = [start]
+        voisins = start.voisins
+        possible_points = voisins
+    
+        while True:
+            n = random.randint(0, len(possible_points)-1)
+            current_point = possible_points[n]
+            visited_points.append(current_point)
+            voisins = current_point.voisins
+            possible_points = [p for p in voisins if p not in visited_points]
+            
+            if current_point == start:
+                return(True, visited_points)
+            
+            if len(possible_points) == 0:   # tous les points ont été visités, il faut encore ajouter start pour finir la boucle
+                if start in voisins:
+                    visited_points.append(start)
+                    return (True, visited_points)
+                else: return (False, [])
+    
+    def genere_1_chemin_fonctionnel():
+        while True:
+            result = genere_1_chemin()
+            if result[0]:
+                print(result[1])
+                print('manque :', [p for p in Points if p not in result[1]])
+                if [p for p in Points if p not in result[1]] == []:
+                    print('Trajet pas optimal trouvé!')
+                    return result[1]
+    
+    chemins_trouves = {}
+    while len(chemins_trouves) < iterations:
+        nouveau_chemin = genere_1_chemin_fonctionnel()
+        chemins_trouves[longueur_chemin(nouveau_chemin)+longueur_chemin((start, nouveau_chemin[-1]))] = nouveau_chemin
+        print(len(chemins_trouves), 'chemins ont été trouvés.')
+    long_min = min(list(chemins_trouves.keys()))
+    print('longueur :', long_min)
+    result = chemins_trouves[long_min]
+
+    
+    # Cette partie permet de mettre de côté les segments du trajet afin de les afficher d'une autre couleur
+    for index, node1 in enumerate(result[:-1]):
+        node2 = result[index+1]
+        if  (name:=make_name_from_vars([node1, node2], '_')) in Segments.keys():
+            shortest_random_segments_salesman.add(name)
+        elif (name:=make_name_from_vars([node2, node1], '_')) in Segments.keys():
+            shortest_random_segments_salesman.add(name)
+
+    if  (name:=make_name_from_vars([start, result[-1]], '_')) in Segments.keys():
+        shortest_random_segments_salesman.add(name)
+    elif (name:=make_name_from_vars([result[-1], start], '_')) in Segments.keys():
+        shortest_random_segments_salesman.add(name)
+
+    return
+
 #-----Fonction d'exécution du programme-----
 
 def execute():
-    global Points, Segments, nombre_points, trajet, iterations_aleatoires, mode_aleatoire, precision_longueur, mode_copie, adresse
+    global Points, Segments, nombre_points, trajet, fonctions_methode_aleatoire, iterations_salesman, mode_copie, adresse
 
     rapport = [['SEP=,'],
                ['' ,        'Dijkstra',     '',         'Méthode aléatoire',    '',         '',                 ''              ],
@@ -293,7 +358,10 @@ def execute():
     print(f'Temps total : {t5-t0}')
 
     print('\nMéthode aléatoire :')
-    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], iterations_aleatoires, mode_aleatoire, precision_longueur)
+    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], fonctions_methode_aleatoire)
+    
+    print('\nVoyageur de commerce')
+    voyageur_commerce(iterations_salesman)
 
     if mode_copie != 'copie': copie_graphe(Points, Segments, 'sauvegarde', adresse)
  
@@ -309,6 +377,7 @@ def Affiche(points: list, segments: list):
         'segments': BLEU,
         'chemin optimal': ROUGE,
         'chemin optimal aléatoire': VERT,
+        'voyageur de commerce aleatoire': ORANGE,
         'points': BLEU,
         'noms': NOIR
     }
@@ -331,6 +400,8 @@ def Affiche(points: list, segments: list):
                 pygame.draw.line(screen, couleurs['chemin optimal'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
             elif fig.nom in shortest_random_segments:
                 pygame.draw.line(screen, couleurs['chemin optimal aléatoire'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
+            elif fig.nom in shortest_random_segments_salesman:
+                pygame.draw.line(screen, couleurs['voyageur de commerce aleatoire'], segments[key].ext[0].pos, segments[key].ext[1].pos, 2)
             else:
                 pygame.draw.line(screen, couleurs['segments'], fig.ext[0].pos, fig.ext[1].pos, 2) 
 
@@ -466,7 +537,7 @@ def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'G
         Segments = {}
 
         with open(adresse, 'r') as f:
-            texte = list(csv.reader(f, delimiter=","))
+            texte = list(csv.reader(f, delimiter=";"))
         
         index = 0
         for line in texte:
@@ -474,7 +545,6 @@ def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'G
                 case 'P':
                     Points.append(Noeud(line[1], eval(line[2])[0], eval(line[2])[1], int(line[3]), []))
                     Points.pop()
-                    #print(f'Noeud({line[1]}, {eval(line[2])[0]}, {eval(line[2])[1]}, {line[3]}, [])')
                     index = int(line[1].replace('P',''))
                 case 'A':
                     ext = list(line[1][1:-1].split(', '))
@@ -565,15 +635,20 @@ Segments = {}
 shortest_path = []
 shortest_random_path = set()
 shortest_random_segments = set()
+shortest_random_segments_salesman = set()
 shortest_length = -1
 
 # Variables modifiables par l'utilisateur
-nombre_points = 200
-iterations_aleatoires = 100
-mode_aleatoire = 2
-precision_longueur = 50   # La différence de longueur max (en %) entre la longueur minimale et la longueur min aléatoire quand le mode aléatoire vaut 2
+nombre_points = 10
+fonctions_methode_aleatoire = {
+    'iterations': 100,
+    'mode': 1,
+    'precision longueur': 50   # La différence de longueur max (en %) entre la longueur minimale et la longueur min aléatoire quand le mode aléatoire vaut 2
+
+}
+iterations_salesman = 5
 trajet = (0, 1)   # Le point de départ et celui d'arrivée (p. ex: trajet = (0, 100) indique que le point de départ est P0 et celui d'arrivée est P100)
-mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
+mode_copie = 'nocopie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'GrapheFile.csv'
 # Tip : en mettant mode_copie = 'copie' on peut ensuite modifier les points de départ et d'arrivée (trajet) pour recalculer l'itinéraire.
 
