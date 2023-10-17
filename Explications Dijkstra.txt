@@ -1,0 +1,28 @@
+Le programme Dijkstra permet de lire ou créer un graphe sur lequel on utilise la méthode de 
+Djkstra pour trouver le trajet optimal entre deux points, la méthode aléatoire pour trouver 
+un trajet intéressant entre deux points, et le voyageur de commerce avec la méthode aléatoire.
+
+L'utilisateur peut modifier certaines variables globales à la fin du programme pour modifier 
+les paramètres d'exécution des différentes méthodes de pathfinding.
+
+-- Génération de graphe --
+On peut premièrement choisir si on génère un graphe ou si on en utilise un déjà généré.
+Cela se fait en modifiant 'mode_copie'. 
+-> 'copie' signifie qu'on copie un graphe déjà existant depuis l'adresse stockée dans la 
+   variable 'adresse'
+-> Toute valeur autre que 'copie' permet de générer un nouveau graphe. Il faut pour cela 
+   définir le nombre de points dans 'nombre_points'
+   Attention : - le nombre minimum de points est 4
+               - les valeurs de la variable 'trajet' doivent être strictement plus petites 
+                 que le nombre de points pour ne pas rencontrer d'erreur
+Lors de la génération d'un graphe, le programme fait en sorte que chaque point soit lié 
+aux trois points les plus proches, ce qui explique le minimum de 4 points dans un graphe.
+
+-- Dijkstra --
+La méthode de Dijkstra n'a besoin que d'une variable : 'trajet'.
+'trajet' permet de définir le point initial et le point final. Ces valeurs doivent être 
+comprises entre 0 et nombre_points - 1
+
+-- Méthode aléatoire --
+
+-- Voyageur de commerce --
