@@ -1,5 +1,7 @@
 Le programme Dijkstra permet de lire ou créer un graphe sur lequel on utilise la méthode de Djkstra pour trouver le trajet optimal entre deux points, la méthode aléatoire pour trouver un trajet intéressant entre deux points, et le voyageur de commerce avec la méthode aléatoire.
 
+Ce document explique comment UTILISER LE PROGRAMME et comment RESOUDRE DES BUGS fréquents.
+
 L'utilisateur peut modifier certaines variables globales à la fin du programme pour modifier les paramètres d'exécution des différentes méthodes de pathfinding.
 
 -- Génération de graphe --
@@ -46,13 +48,6 @@ Les problèmes suivants peuvent être rencontrés lors de l'exécution du progra
       Régler le problème en allant dans la fonction 'copie_graphe', après "elif mode == 'copie':" et changer le delimiter dans 
       'texte = list(csv.reader(f, delimiter=";"))'
       Essayer de remplacer le delimiter par ',' ou ';'. 
-
-
-
-
-- trajet hors graphe (bis) peut arriver lorsque graphe mal copié (donc pas généré) : en effet graphe à copier mal lu etgraphe final contient 0 point.
-                        Régler problème en allant dans la fonction copie_graphe, après 'elif mode == 'copie':' et changer le delimiter dans 'texte = list(csv.reader(f, delimiter=";"))'. Essayer de le remplacer par ',' ou ';'. Ce problème arrive généralement quand on copie un graphe depuis un fichier .csv qu'on a modifié manuellement.
-
 
 -- Fonctionnement anormal --
 - La méthode aléatoire (mode 2) donne un trajet pas du tout optimal malgré un faible pourcentage de précision:
