@@ -1,28 +1,59 @@
-Le programme Dijkstra permet de lire ou créer un graphe sur lequel on utilise la méthode de 
-Djkstra pour trouver le trajet optimal entre deux points, la méthode aléatoire pour trouver 
-un trajet intéressant entre deux points, et le voyageur de commerce avec la méthode aléatoire.
+Le programme Dijkstra permet de lire ou créer un graphe sur lequel on utilise la méthode de Djkstra pour trouver le trajet optimal entre deux points, la méthode aléatoire pour trouver un trajet intéressant entre deux points, et le voyageur de commerce avec la méthode aléatoire.
 
-L'utilisateur peut modifier certaines variables globales à la fin du programme pour modifier 
-les paramètres d'exécution des différentes méthodes de pathfinding.
+L'utilisateur peut modifier certaines variables globales à la fin du programme pour modifier les paramètres d'exécution des différentes méthodes de pathfinding.
 
 -- Génération de graphe --
 On peut premièrement choisir si on génère un graphe ou si on en utilise un déjà généré.
 Cela se fait en modifiant 'mode_copie'. 
--> 'copie' signifie qu'on copie un graphe déjà existant depuis l'adresse stockée dans la 
-   variable 'adresse'
--> Toute valeur autre que 'copie' permet de générer un nouveau graphe. Il faut pour cela 
-   définir le nombre de points dans 'nombre_points'
+-> 'copie' signifie qu'on copie un graphe déjà existant depuis l'adresse stockée dans la variable 'adresse'
+-> Toute valeur autre que 'copie' permet de générer un nouveau graphe. Il faut pour cela définir le nombre de points dans 'nombre_points'
    Attention : - le nombre minimum de points est 4
-               - les valeurs de la variable 'trajet' doivent être strictement plus petites 
-                 que le nombre de points pour ne pas rencontrer d'erreur
-Lors de la génération d'un graphe, le programme fait en sorte que chaque point soit lié 
-aux trois points les plus proches, ce qui explique le minimum de 4 points dans un graphe.
+               - les valeurs de la variable 'trajet' doivent être strictement plus petites que le nombre de points pour ne pas rencontrer d'erreur
+Lors de la génération d'un graphe, le programme fait en sorte que chaque point soit lié aux trois points les plus proches, ce qui explique le minimum de 4 points dans un graphe.
 
 -- Dijkstra --
 La méthode de Dijkstra n'a besoin que d'une variable : 'trajet'.
-'trajet' permet de définir le point initial et le point final. Ces valeurs doivent être 
-comprises entre 0 et nombre_points - 1
+'trajet' permet de définir le point initial et le point final. Ces valeurs doivent être comprises entre 0 et nombre_points - 1
 
 -- Méthode aléatoire --
+La méthode aléatoire a besoin des variables 'trajet' et 'fonctions_methode_aleatoire'.
+La fonction des éléments de 'fonctions_methode_aleatoire' est la suivante :
+- mode : la méthode aléatoire a quatre modes différents :
+   0 (défaut) : Le programme calcule 'iterations' chemins différents sans prendre en compte combien atteignent l'arrivée (renvoie une erreur si aucun n'atteint l'arrivée);
+   1 : Le programme calcule des chemins jusqu'à-ce que qu'il y en ait 'iterations' qui atteignent l'arrivée.
+   2 : Le programme s'arrête lorsque la longueur minimal aléatoire est relativement proche (de 'precision longueur' %) de la vraie longueur optimale
+   3 : La méthode aléatoire n'est pas exécutée
+- iterations : Le nombre de chemins qui vont être calculés au total si mode = 0, ou de chemins atteignant l'arrivée si mode = 1
+- precision longueur : le pourcentage de précision acceptable par rapport au trajet minimal calculé avec Dijkstra si mode = 2, doit être positif
 
 -- Voyageur de commerce --
+La méthode du voyageur de commerce utilise la variable 'iterations_salesman' pour décider combien de cycles seront générés avant de choisir le plus court. Un plus grand nombre d'itérations donnera un trajet plus optimal.
+
+
+== Résolution de bugs ==
+Les problèmes suivants peuvent être rencontrés lors de l'exécution du programme.
+
+-- Crash du programme --
+- Message d'erreur : "Aucun trajet n'atteint l'arrivée."
+   Ceci peut arriver lorsqu'on utilise la méthode aléatoire avec le mode 0. En effet, si aucun des chemins générés n'atteint le point d'arrivée il n'y aura pas de chemin viable.
+- Message d'erreur : "Le trajet demandé n'est pas compris dans le graphe.\n Donner des valeurs plus petites aux points de départ et d'arrivée pour regler le problème. "
+   Ce prblème peut avoir deux causes différentes :
+   1. Le point de départ et/ou le point d'arrivée ne sont pas dans le graphe
+      Si un des points donnés n'est pas dans le graphe, il est impossible de calculer un chemin entre ces deux points.
+      Régler le problème en vérifiant que les valeurs de 'trajet' soient plus petites que le nombre de points du graphe.
+   2. Le graphe a mal été copié
+      Si on copie un graphe plutôt que d'en générer un, il est possible qu'il ait mal été copié et que le graphe contienne 0 point, ce qui produit une erreur lors de la recherche de chemin. Ce problème arrive généralement quand on copie un graphe depuis un fichier .csv qu'on a modifié manuellement.
+      Régler le problème en allant dans la fonction 'copie_graphe', après "elif mode == 'copie':" et changer le delimiter dans 
+      'texte = list(csv.reader(f, delimiter=";"))'
+      Essayer de remplacer le delimiter par ',' ou ';'. 
+
+
+
+
+- trajet hors graphe (bis) peut arriver lorsque graphe mal copié (donc pas généré) : en effet graphe à copier mal lu etgraphe final contient 0 point.
+                        Régler problème en allant dans la fonction copie_graphe, après 'elif mode == 'copie':' et changer le delimiter dans 'texte = list(csv.reader(f, delimiter=";"))'. Essayer de le remplacer par ',' ou ';'. Ce problème arrive généralement quand on copie un graphe depuis un fichier .csv qu'on a modifié manuellement.
+
+
+-- Fonctionnement anormal --
+- La méthode aléatoire (mode 2) donne un trajet pas du tout optimal malgré un faible pourcentage de précision:
+   Cela peut arriver si Dijkstra n'a pas été exécuté avant la méthode aléatoire. Comme le trajet optimal n'a pas été calculé avec Dijkstra, la comparaison de longueurs est faussée et n'importe quel trajet peut être renvoyé par la méthode, même s'il est pas optimal.
