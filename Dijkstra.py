@@ -238,6 +238,7 @@ def methode_aleatoire(start: Noeud, target: Noeud, fonctions):
     pass
 
 def voyageur_commerce(iterations):
+    t_init = time.time()
 
     global Points, Segments, shortest_random_segments_salesman
     
@@ -268,19 +269,21 @@ def voyageur_commerce(iterations):
     
     def genere_1_chemin_fonctionnel():
         while True:
+            if time.time() - t_init > 5: return 'pass'
             result = genere_1_chemin()
             if result[0]:
-                print(result[1])
-                print('manque :', [p for p in Points if p not in result[1]])
                 if [p for p in Points if p not in result[1]] == []:
-                    print('Trajet pas optimal trouvé!')
                     return result[1]
     
     chemins_trouves = {}
     while len(chemins_trouves) < iterations:
         nouveau_chemin = genere_1_chemin_fonctionnel()
+        if nouveau_chemin == 'pass': 
+            print("Aucun chemin n'a été trouvé après 5 secondes d'exécution.\n" +
+                  "Il se peut que plusieurs groupes de points ne soient liés entre eux que par un unique point.")
+            return
         chemins_trouves[longueur_chemin(nouveau_chemin)+longueur_chemin((start, nouveau_chemin[-1]))] = nouveau_chemin
-        print(len(chemins_trouves), 'chemins ont été trouvés.')
+    print(len(chemins_trouves), 'chemins ont été trouvés.')
     long_min = min(list(chemins_trouves.keys()))
     print('longueur :', long_min)
     result = chemins_trouves[long_min]
@@ -351,14 +354,14 @@ def execute():
     
     print('\nDijkstra :')
     t4 = time.time()
-    Dijkstra(Points[trajet[0]], Points[trajet[1]])
+    # Dijkstra(Points[trajet[0]], Points[trajet[1]])
     t5 = time.time()
     
     print(f'Temps de calcul de l\'itinéraire optimal : {t5-t4}')
     print(f'Temps total : {t5-t0}')
 
     print('\nMéthode aléatoire :')
-    methode_aleatoire(Points[trajet[0]], Points[trajet[1]], fonctions_methode_aleatoire)
+    # methode_aleatoire(Points[trajet[0]], Points[trajet[1]], fonctions_methode_aleatoire)
     
     print('\nVoyageur de commerce')
     voyageur_commerce(iterations_salesman)
@@ -537,7 +540,7 @@ def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'G
         Segments = {}
 
         with open(adresse, 'r') as f:
-            texte = list(csv.reader(f, delimiter=";"))
+            texte = list(csv.reader(f, delimiter=","))
         
         index = 0
         for line in texte:
@@ -639,14 +642,14 @@ shortest_random_segments_salesman = set()
 shortest_length = -1
 
 # Variables modifiables par l'utilisateur
-nombre_points = 10
+nombre_points = 20
 fonctions_methode_aleatoire = {
     'iterations': 100,
     'mode': 1,
     'precision longueur': 50   # La différence de longueur max (en %) entre la longueur minimale et la longueur min aléatoire quand le mode aléatoire vaut 2
 
 }
-iterations_salesman = 5
+iterations_salesman = 30
 trajet = (0, 1)   # Le point de départ et celui d'arrivée (p. ex: trajet = (0, 100) indique que le point de départ est P0 et celui d'arrivée est P100)
 mode_copie = 'nocopie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'GrapheFile.csv'
