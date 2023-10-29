@@ -99,11 +99,14 @@ class Fourmis:
     
     chem = []
     
+    distance = 0
+    
     def __init__(self,nom , pos, Points, chemin):
         self.nom = nom
         self.pos = pos
         self.point = Points
         self.chem = chemin
+
         
     def __repr__(self):
        return f"{self.nom, self.pos}"
@@ -119,97 +122,132 @@ def cree_fourmis(nombre: int):
         listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
       
 def mouve_fourmis():
-    global Segments, listfourmis, Points, nombre_fourmis, fin
+    global Segments, listfourmis, Points, nombre_fourmis, fin, chem_possible
     
-    chem_possible = []
     
     for i in listfourmis:
-        #i.point.r -= 1 / nombre_fourmis 
         
+        i.point.r -= 20 / nombre_fourmis 
+        Points[0].r = 5
         
-        if i.point == Points[-1]:
-            """
-            longeur_chemin = 0
-            somme_fer = 0
-            for h in i.chem:
-                longeur_chemin += h.long
-            for h in i.chem:
-                h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 50) / longeur_chemin * h.long)
-                somme_fer += h.fer
-            """
-            somme_fer = 0
-            longeur_chemin = 0
-            for h in i.chem:
-                h.fer += 10
-                somme_fer += h.fer
-                longeur_chemin += h.long
-            
-            if i.chem not in chem_possible:
-                chem_possible.append(i.chem)
-            
-            best_chem = (0, 0)
-            
-            
-            #if somme_fer / longeur_chemin > 5:
-            if somme_fer / longeur_chemin > 2:
-                for l in chem_possible:
-                    somme_fer_final = 0
-                    longeur_tot =0
-                    for m in l:
-                        somme_fer_final += m.fer
-                        longeur_tot += m.long
-                    if best_chem[1] < somme_fer / longeur_chemin:
-                        best_chem = (l, somme_fer / longeur_chemin)
-                fin = False
-                print(i.chem[0].fer)
-                print(best_chem)
-
-            i.chem = []
-            i.pos = Points[0].pos
-            i.point = Points[0]
-            
-            
-        else:
-            somme_fer = 0
-            liste_segments = []
-            for j in i.point.seg:
-                if j not in i.chem:
-                    somme_fer += j.fer
-                    liste_segments.append((somme_fer, j))
-            
-            nombre_alea = 0
-            nombre_alea = random.uniform(0, somme_fer - 1)
-            seg_emprunté = Segments[0]
-            
-            
-            #print(liste_segments)
-            
-            for k in liste_segments:
-                if nombre_alea < k[0]:
-                    seg_emprunté = k[1]
-                    break
-            
-            if seg_emprunté.ext[0] == i.point:
-                if seg_emprunté.ext[1] == Points[0]:
-                    i.chem = []
-                    
-                i.chem.append(seg_emprunté)
-                i.pos = seg_emprunté.ext[1].pos
-                i.point = seg_emprunté.ext[1]
+        #code pour trouver le chemin le plus court
+        
+        if i.distance == 0:
+        
+            if i.point == Points[-1]:
                 
-            elif seg_emprunté.ext[1] == i.point:
-                if seg_emprunté.ext[0] == Points[0]:
-                    i.chem = []
-                    
-                i.chem.append(seg_emprunté)
-                i.pos = seg_emprunté.ext[0].pos
-                i.point = seg_emprunté.ext[0]
-            
-            else:
+                longeur_chemin = 0
+                somme_fer = 0
+                for h in i.chem:
+                    longeur_chemin += h.long
+                for h in i.chem:
+                    #h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
+                    h.fer += 1000 / longeur_chemin
+                    somme_fer += h.fer
+                #print(longeur_chemin)
+                print(somme_fer)
+                
+
+                if i.chem not in chem_possible:
+                    chem_possible.append(i.chem)
+                
+
+                i.chem = []
                 i.pos = Points[0].pos
                 i.point = Points[0]
-                i.chem = []
+                
+            #code pour le voyageur de comerce
+            
+                """
+                """
+            
+           
+            else:
+                somme_fer = 0
+                liste_segments = []
+                for j in i.point.seg:
+                    
+                    # bout de code pour le voyageur de commerce
+                    """
+                    if j.ext[0] == i.point:
+                        if j.ext[1] not in i.p_visité:
+                            somme_fer += j.fer
+                            liste_segments.append((somme_fer, j))
+                            
+                    if j.ext[1] == i.point:
+                        if j.ext[0] not in i.p_visité:
+                            somme_fer += j.fer
+                            liste_segments.append((somme_fer, j))
+                    """    
+                    # bout de code pour trouver un chemin entre duex points
+                    
+                    if j not in i.chem:
+                        somme_fer += j.fer
+                        liste_segments.append((somme_fer, j))
+                
+                nombre_alea = 0
+                nombre_alea = random.uniform(0, somme_fer - 1)
+                seg_emprunté = Segments[0]
+                
+                
+                #print(liste_segments)
+                
+                for k in liste_segments:
+                    if nombre_alea < k[0]:
+                        seg_emprunté = k[1]
+                        break
+                
+                i.distance += int(seg_emprunté.long / 10)
+                
+                if seg_emprunté.ext[0] == i.point:
+                    if seg_emprunté.ext[1] == Points[0]:
+                        i.chem = []
+                        
+                    i.chem.append(seg_emprunté)
+                    i.pos = seg_emprunté.ext[1].pos
+                    i.point = seg_emprunté.ext[1]
+                    seg_emprunté.ext[1].r += 20 / nombre_fourmis
+                    
+                elif seg_emprunté.ext[1] == i.point:
+                    if seg_emprunté.ext[0] == Points[0]:
+                        i.chem = []
+                        
+                    i.chem.append(seg_emprunté)
+                    i.pos = seg_emprunté.ext[0].pos
+                    i.point = seg_emprunté.ext[0]
+                    seg_emprunté.ext[0].r += 20 / nombre_fourmis
+                
+                else:
+                    i.pos = Points[0].pos
+                    i.point = Points[0]
+                    i.chem = []
+        else:
+            i.distance -=1
+
+
+            
+def best_chemin():
+    global chem_possible, fin, best_chem
+    
         
+    best_chem = (0, 0)        
+           
+    for l in chem_possible:
+        somme_fer = 0
+        longeur = 0
+        for m in l:
+            somme_fer += m.fer
+            longeur += m.long
+        if best_chem[1] < (0.5 * somme_fer) / longeur :
+            best_chem = (l, (0.5 * somme_fer) / longeur)
+    
+    if best_chem[0][0].ext[0] == best_chem[0][1].ext[0] or best_chem[0][0].ext[1] == best_chem[0][1].ext[1] or best_chem[0][0].ext[0] == best_chem[0][1].ext[1] or best_chem[0][0].ext[1] == best_chem[0][0].ext[0]:
+        best_chem[0].remove(best_chem[0][0])
+        
+    if fin:
+        print(best_chem)
+        print(chem_possible)
+    fin = False
         
 #-----Fonction d'exécution du programme-----
 
@@ -224,6 +262,10 @@ def execute():
 
         if cherche_iles(Points):
             break
+        
+        Points = []
+        Segments = []
+        
     cree_fourmis(nombre_fourmis)
     
     export_graphe([Points, Segments])
@@ -233,7 +275,14 @@ def execute():
     Segments_adjasents()
 
     #print(Points[0].seg)
-    
+    """
+    while fin:
+        mouve_fourmis()
+        for seg in Segments:
+            if seg.fer > 500:
+                best_chemin()
+    """
+        
     frame = 0
     continuer = True
     cnt = 2
@@ -245,11 +294,15 @@ def execute():
             
         frame += 1
         Affiche(Points, Segments, listfourmis)
-        
-        if fin:
+         
+        if fin:    
             if frame % 1 == 0:
                 mouve_fourmis()
-
+                
+                for i in Segments:
+                    if i.fer > 10:
+                        i.fer -= 1
+                
         pygame.display.flip()
         clock.tick(10)
         cnt -= 1
@@ -259,16 +312,15 @@ def execute():
 #-----Affichage de Pygame sur l'ecran-----
 
 def Affiche(points: list, segments: list, lisfourmis: list):
-    global noeud1 #debug
+    global noeud1, best_chem #debug
     couleur_fond = BLANC
         
     screen.fill(couleur_fond)
     for fig in segments:
-        couleur = 0
-        if couleur < 255:
-            couleur = 255 * fig.fer / 255
-        else:
+        couleur = fig.fer
+        if couleur > 255:
             couleur = 255
+            best_chemin()
         pygame.draw.line(screen, (255, couleur, 0), fig.ext[0].pos, fig.ext[1].pos, 2)
     for fig in points:
         pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
@@ -276,6 +328,10 @@ def Affiche(points: list, segments: list, lisfourmis: list):
         screen.blit(nomPoint, [fig.pos[0]+fig.r,fig.pos[1]])
     for fig in listfourmis:
         pygame.draw.circle(screen, JAUNE, fig.pos, 3)
+        
+    if not fin:
+        for fig in best_chem[0]:
+            pygame.draw.line(screen, (255, 0, 255), fig.ext[0].pos, fig.ext[1].pos, 2)
         
 
 #-----Génération de points-----
@@ -411,8 +467,9 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
-nombre_points = 20
-nombre_fourmis = 10
+nombre_points = 100
+nombre_fourmis = 500
+chem_possible = []
 fin = True
 
 #-----Affichage-----
