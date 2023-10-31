@@ -101,11 +101,14 @@ class Fourmis:
     
     distance = 0
     
-    def __init__(self,nom , pos, Points, chemin):
+    p_visité = []
+    
+    def __init__(self,nom , pos, Points, chemin, points : list):
         self.nom = nom
         self.pos = pos
         self.point = Points
         self.chem = chemin
+        self.p_visité = points
 
         
     def __repr__(self):
@@ -119,7 +122,7 @@ def cree_fourmis(nombre: int):
     
     listfourmis = []
     for i in range (0, nombre):
-        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], []))
+        listfourmis.append(Fourmis("F"+str(i), Points[0].pos, Points[0], [], [Points[0]]))
       
 def mouve_fourmis():
     global Segments, listfourmis, Points, nombre_fourmis, fin, chem_possible
@@ -133,8 +136,10 @@ def mouve_fourmis():
         #code pour trouver le chemin le plus court
         
         if i.distance == 0:
-        
-            if i.point == Points[-1]:
+            
+            if len(i.p_visité) == len(Points):              #code pour le voyageur de comerce
+                
+            #if i.point == Points[-1]:						#code pour le chemin le plus court
                 
                 longeur_chemin = 0
                 somme_fer = 0
@@ -142,10 +147,10 @@ def mouve_fourmis():
                     longeur_chemin += h.long
                 for h in i.chem:
                     #h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
-                    h.fer += 1000 / longeur_chemin
+                    h.fer += 2000 / longeur_chemin
                     somme_fer += h.fer
                 #print(longeur_chemin)
-                print(somme_fer)
+                print(".")
                 
 
                 if i.chem not in chem_possible:
@@ -155,12 +160,8 @@ def mouve_fourmis():
                 i.chem = []
                 i.pos = Points[0].pos
                 i.point = Points[0]
+                i.p_visité = []
                 
-            #code pour le voyageur de comerce
-            
-                """
-                """
-            
            
             else:
                 somme_fer = 0
@@ -168,7 +169,7 @@ def mouve_fourmis():
                 for j in i.point.seg:
                     
                     # bout de code pour le voyageur de commerce
-                    """
+                    
                     if j.ext[0] == i.point:
                         if j.ext[1] not in i.p_visité:
                             somme_fer += j.fer
@@ -184,7 +185,7 @@ def mouve_fourmis():
                     if j not in i.chem:
                         somme_fer += j.fer
                         liste_segments.append((somme_fer, j))
-                
+                    """
                 nombre_alea = 0
                 nombre_alea = random.uniform(0, somme_fer - 1)
                 seg_emprunté = Segments[0]
@@ -202,25 +203,30 @@ def mouve_fourmis():
                 if seg_emprunté.ext[0] == i.point:
                     if seg_emprunté.ext[1] == Points[0]:
                         i.chem = []
+                        i.p_visité = []
                         
                     i.chem.append(seg_emprunté)
                     i.pos = seg_emprunté.ext[1].pos
                     i.point = seg_emprunté.ext[1]
+                    i.p_visité.append(seg_emprunté.ext[1])
                     seg_emprunté.ext[1].r += 20 / nombre_fourmis
                     
                 elif seg_emprunté.ext[1] == i.point:
                     if seg_emprunté.ext[0] == Points[0]:
                         i.chem = []
+                        i.p_visité = []
                         
                     i.chem.append(seg_emprunté)
                     i.pos = seg_emprunté.ext[0].pos
                     i.point = seg_emprunté.ext[0]
+                    i.p_visité.append(seg_emprunté.ext[0])
                     seg_emprunté.ext[0].r += 20 / nombre_fourmis
                 
                 else:
                     i.pos = Points[0].pos
                     i.point = Points[0]
                     i.chem = []
+                    i.p_visité = []
         else:
             i.distance -=1
 
@@ -229,8 +235,8 @@ def mouve_fourmis():
 def best_chemin():
     global chem_possible, fin, best_chem
     
-        
-    best_chem = (0, 0)        
+    tout_long = [] 
+    best_chem = (0, 1000000)        
            
     for l in chem_possible:
         somme_fer = 0
@@ -238,15 +244,17 @@ def best_chemin():
         for m in l:
             somme_fer += m.fer
             longeur += m.long
-        if best_chem[1] < (0.5 * somme_fer) / longeur :
-            best_chem = (l, (0.5 * somme_fer) / longeur)
-    
+        tout_long.append(longeur)
+        if best_chem[1] > longeur: #(0.5 * somme_fer) / longeur :
+            best_chem = (l, longeur) #(0.5 * somme_fer) / longeur)
+    """
     if best_chem[0][0].ext[0] == best_chem[0][1].ext[0] or best_chem[0][0].ext[1] == best_chem[0][1].ext[1] or best_chem[0][0].ext[0] == best_chem[0][1].ext[1] or best_chem[0][0].ext[1] == best_chem[0][0].ext[0]:
         best_chem[0].remove(best_chem[0][0])
-        
+    """   
     if fin:
-        print(best_chem)
-        print(chem_possible)
+        print(best_chem[0], longeur)
+        for i in tout_long:            
+            print(i, "// ")
     fin = False
         
 #-----Fonction d'exécution du programme-----
@@ -467,8 +475,8 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
-nombre_points = 100
-nombre_fourmis = 500
+nombre_points = 10
+nombre_fourmis = 1000
 chem_possible = []
 fin = True
 
