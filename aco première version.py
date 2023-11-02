@@ -3,6 +3,7 @@
 import pygame
 import math
 import random
+import csv
 
 
 #===Classes===
@@ -34,7 +35,8 @@ class Noeud:
         self.pos = [x,y]
         self.r = 10 + taille*25/100
         self.voisins = adjacents
-        self.seg = segments
+        if segments != None: self.seg = segments
+        else: self.seg = [s for s in Segments if self in Segments.ext]
 
 
         for noeud in self.voisins:
@@ -262,17 +264,34 @@ def best_chemin():
 def execute():
     global Points, Segments, nombre_points, listfourmis, fin
 
-    while True:
-        
-        generePoints(nombre_points)
+    iterations = 0
 
-        trouvevoisins(Points)
+    if mode_copie != 'copie':
+        while True:
 
-        if cherche_iles(Points):
-            break
-        
-        Points = []
-        Segments = []
+            generePoints(nombre_points)
+            iterations += 1
+
+            trouvevoisins(Points)
+
+            
+            if cherche_iles(Points):
+                break
+
+            Points = []
+            Segments = []
+
+        for i in Points:
+            if Points[0] not in i.voisins: 
+                Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
+        Points[0].voisins.pop(Points[0].voisins.index(Points[0]))
+
+        match iterations:
+            case 1 : print(f'{iterations} graphe a été généré.')
+            case n if n > 1: print(f'{iterations} graphes ont été générés.')
+
+    else:
+        copie_graphe([], [], 'copie', adresse)
         
     cree_fourmis(nombre_fourmis)
     
@@ -333,7 +352,7 @@ def Affiche(points: list, segments: list, lisfourmis: list):
     for fig in points:
         pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
         nomPoint = font.render(fig.nom, True, NOIR)
-        screen.blit(nomPoint, [fig.pos[0]+fig.r,fig.pos[1]])
+        screen.blit(nomPoint, [fig.pos[0],fig.pos[1]])
     for fig in listfourmis:
         pygame.draw.circle(screen, JAUNE, fig.pos, 3)
         
@@ -423,6 +442,46 @@ def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choi
     else: return False
 
 
+def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'Graphe_File.csv'):    # mode: 'sauvegarde'/'copie'
+    
+    if mode == 'sauvegarde':
+        texte = []
+        for point in liste_points:
+            texte.append(['P', point.nom, point.pos, point.r, []])
+        for key in liste_aretes:
+            texte.append(['A', key.ext, key.long])
+
+        with open(adresse, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['SEP=,'])    # Permet d'ouvrir le fichier csv dans excel en séparant les données en colonnes
+            for row in texte:
+                writer.writerow(row)
+
+    elif mode == 'copie':
+        global Points, Segments, trajet
+            
+        Points = []
+        Segments = []
+
+        with open(adresse, 'r') as f:
+            texte = list(csv.reader(f, delimiter=","))
+        
+        index = 0
+        for line in texte:
+            match line[0]:
+                case 'P':
+                    Points.append(Noeud(line[1], eval(line[2])[0], eval(line[2])[1], int(line[3]), [], None))
+                    Points.pop()
+                    index = int(line[1].replace('P',''))
+                case 'A':
+                    ext = list(line[1][1:-1].split(', '))
+                    name = str(ext[0]) + '_' + str(ext[1])
+                    point_numbers = [int(ext[0].replace('P', '')), int(ext[1].replace('P', ''))]
+                    Segments.append(Vertice(Points[point_numbers[0]], Points[point_numbers[1]], eval(line[2]), 0))
+                    Points[point_numbers[0]].voisins.append(Points[point_numbers[1]])
+                    Points[point_numbers[1]].voisins.append(Points[point_numbers[0]])
+    pass
+
 def netoyer_segment():
     global Segments
     for i in Segments:
@@ -479,6 +538,9 @@ nombre_points = 10
 nombre_fourmis = 1000
 chem_possible = []
 fin = True
+
+mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
+adresse = 'Graphe10.csv'
 
 #-----Affichage-----
 
