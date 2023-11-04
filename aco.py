@@ -177,12 +177,13 @@ def mouve_fourmis():
                         if j.ext[0] not in i.p_visité:
                             somme_pher += j.pher
                             liste_segments.append((somme_pher, j))
-                    """    
+                       
                     # bout de code pour trouver un chemin entre duex points
-                    
+                    """
                     if j not in i.chem:
                         somme_pher += j.pher
                         liste_segments.append((somme_pher, j))
+                        
                     # fin du code pour le chemin le plus court
                     
                 nombre_alea = 0
@@ -238,51 +239,73 @@ def best_chemin():
     best_chem = [] 
     noeud = Points[0]
     point_visité = [Points[0]]
+    seg_emprunté = []
     #code pour le chemin le plus court
     
     while noeud != Points[-1]:
         best_seg = (0, 0)
     
         for i in noeud.seg:
-            if i not in best_chem:
+            if i not in best_chem and i not in seg_emprunté:
                 if i.pher > best_seg[0]:
                     best_seg = (i.pher, i)
-               
-        best_chem.append(best_seg[1])
         
-        print(best_seg[1])
+        if best_seg == (0, 0):
+            noeud = best_chem[-2]
+            best_chem.pop()
         
-        if noeud == best_seg[1].ext[0]:
-            noeud = best_seg[1].ext[1]
-        else:
-            noeud = best_seg[1].ext[0]
-    """
+        else:            
+            best_chem.append(best_seg[1])
+            
+            print(best_seg[1])
+            
+            if noeud == best_seg[1].ext[0]:
+                noeud = best_seg[1].ext[1]
+            else:
+                noeud = best_seg[1].ext[0]
+                
+        seg_emprunté.append(best_seg)
+            
+        if len(seg_emprunté) > 2:
+            seg_emprunté.remove(seg_emprunté[0])
+    
     #code pour le voyageur de commerce
+    """
     while len(point_visité) != len(Points):
         best_seg = (0, 0)
-        
+         
         for i in noeud.seg:
             if noeud == i.ext[0]:
-                if i.ext[1] not in point_visité:
+                if i.ext[1] not in point_visité and i not in seg_emprunté:
                     if i.pher > best_seg[0]:
                         best_seg = (i.pher, i)
             else:
-                if i.ext[0] not in point_visité:
+                if i.ext[0] not in point_visité and i not in seg_emprunté:
                     if i.pher > best_seg[0]:
                         best_seg = (i.pher, i)
+                        
+        if best_seg == (0, 0):
+            noeud = best_chem[-2]
+            best_chem.pop()
+            point_visité.pop()
+            
+        else:            
+            best_chem.append(best_seg[1])
+            
+            print(best_seg[1])
+            
+            if noeud == best_seg[1].ext[0]:
+                noeud = best_seg[1].ext[1]
+                point_visité.append(noeud)
+            else:
+                noeud = best_seg[1].ext[0]
+                point_visité.append(noeud)
         
-                    
-        best_chem.append(best_seg[1])
-        
-        print(best_seg[1])
-        
-        if noeud == best_seg[1].ext[0]:
-            noeud = best_seg[1].ext[1]
-            point_visité.append(noeud)
-        else:
-            noeud = best_seg[1].ext[0]
-            point_visité.append(noeud)
-        """    
+        seg_emprunté.append(best_seg)
+            
+        if len(seg_emprunté) > 2:
+            seg_emprunté.remove(seg_emprunté[0])
+        """   
     print(best_chem)
     
 #-----Fonction d'exécution du programme-----
@@ -307,17 +330,6 @@ def execute():
             Points = []
             Segments = []
 
-        """
-        for i in Points:
-            if Points[0] not in i.voisins: 
-                Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
-        Points[0].voisins.pop(Points[0].voisins.index(Points[0]))
-
-        match iterations:
-            case 1 : print(f'{iterations} graphe a été généré.')
-            case n if n > 1: print(f'{iterations} graphes ont été générés.')
-        """
-
     else:
         copie_graphe([], [], 'copie', adresse)
     print('copié')
@@ -331,14 +343,14 @@ def execute():
     Segments_adjacents()
     print('adjacents')
 
-    #print(Points[0].seg)
+    #print(Points[0].seg) 
     
     while fin:
         mouve_fourmis()
         for seg in Segments:
             if seg.pher > 500:
                 best_chemin()
-   
+    
     
         
     frame = 0
@@ -562,16 +574,16 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
-nombre_points = 100
-nombre_fourmis = 5000
+nombre_points = 10
+nombre_fourmis = 500
 chem_possible = []
 fin = True
-mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
+mode_copie = 'mcopie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'Graphe100.csv'
 
 #-----Affichage-----
 
-taille = (1000, 700)
+taille = (700, 500)
 
 
 #===Exécution===
