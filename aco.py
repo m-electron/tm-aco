@@ -29,13 +29,15 @@ class Noeud:
         global Segments
         self.nom = nom
         self.pos = [x,y]
-        self.r = 10 + taille*25/100
+        self.r = taille
         self.voisins = adjacents
         self.seg = segments
+        if segments != None: self.seg = segments
+        else: self.seg = [s for s in Segments if self in Segments.ext]
 
 
         for noeud in self.voisins:
-            cote = Vertice(self,noeud)
+            cote = Arete(self,noeud)
             self.cotes.append(cote)
             noeud.voisins.append(self)
             Segments.append(cote)        
@@ -53,7 +55,7 @@ class Noeud:
         self.voisins += liste
         for v in liste:
             v.voisins.append(self)
-            Segments.append(Vertice(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2), 10))
+            Segments.append(Arete(self, v, math.sqrt((self.pos[0]-v.pos[0])**2 + (self.pos[1]-v.pos[1])**2), 10))
             
       
     def __repr__(self):
@@ -61,7 +63,7 @@ class Noeud:
 
 #-----Côtés-----
 
-class Vertice:
+class Arete:
     global Segments
     
     #Extrémités (list)
@@ -69,14 +71,14 @@ class Vertice:
     
     long = 0
    
-    nom = "vertice anonyme"
+    nom = "Arete anonyme"
     
-    fer = 10
+    pher = 10
     
-    def __init__(self,noeud1,noeud2, hypotenuse, feromone: int):
+    def __init__(self,noeud1,noeud2, hypotenuse, pheromone: int):
         self.ext = [noeud1,noeud2]
         self.long = hypotenuse
-        self.fer = feromone
+        self.pher = pheromone
         if type(noeud1) == Noeud and type(noeud2) == Noeud:
             self.nom = noeud1.nom + '_' + noeud2.nom
         
@@ -128,9 +130,6 @@ def mouve_fourmis():
     for i in listfourmis:
         
         
-        
-        #code pour trouver le chemin le plus court
-        
         if i.distance == 0:
             
             i.point.r -= 20 / nombre_fourmis 
@@ -141,13 +140,13 @@ def mouve_fourmis():
             if i.point == Points[-1]:						#code pour le chemin le plus court
                 
                 longeur_chemin = 0
-                somme_fer = 0
+                somme_pher = 0
                 for h in i.chem:
                     longeur_chemin += h.long
                 for h in i.chem:
-                    #h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
-                    h.fer += 3000 / longeur_chemin
-                    somme_fer += h.fer
+                    #h.pher += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
+                    h.pher += 1500 / longeur_chemin
+                    somme_pher += h.pher
                 #print(longeur_chemin)
                 print(".")
                 
@@ -163,7 +162,7 @@ def mouve_fourmis():
                 
            
             else:
-                somme_fer = 0
+                somme_pher = 0
                 liste_segments = []
                 for j in i.point.seg:
                     
@@ -171,23 +170,23 @@ def mouve_fourmis():
                     """
                     if j.ext[0] == i.point:
                         if j.ext[1] not in i.p_visité:
-                            somme_fer += j.fer
-                            liste_segments.append((somme_fer, j))
+                            somme_pher += j.pher
+                            liste_segments.append((somme_pher, j))
                             
                     if j.ext[1] == i.point:
                         if j.ext[0] not in i.p_visité:
-                            somme_fer += j.fer
-                            liste_segments.append((somme_fer, j))
+                            somme_pher += j.pher
+                            liste_segments.append((somme_pher, j))
                     """    
                     # bout de code pour trouver un chemin entre duex points
                     
                     if j not in i.chem:
-                        somme_fer += j.fer
-                        liste_segments.append((somme_fer, j))
+                        somme_pher += j.pher
+                        liste_segments.append((somme_pher, j))
                     # fin du code pour le chemin le plus court
                     
                 nombre_alea = 0
-                nombre_alea = random.uniform(0, somme_fer - 1)
+                nombre_alea = random.uniform(0, somme_pher - 1)
                 seg_emprunté = Segments[0]
                 
                 
@@ -246,8 +245,8 @@ def best_chemin():
     
         for i in noeud.seg:
             if i not in best_chem:
-                if i.fer > best_seg[0]:
-                    best_seg = (i.fer, i)
+                if i.pher > best_seg[0]:
+                    best_seg = (i.pher, i)
                
         best_chem.append(best_seg[1])
         
@@ -265,12 +264,12 @@ def best_chemin():
         for i in noeud.seg:
             if noeud == i.ext[0]:
                 if i.ext[1] not in point_visité:
-                    if i.fer > best_seg[0]:
-                        best_seg = (i.fer, i)
+                    if i.pher > best_seg[0]:
+                        best_seg = (i.pher, i)
             else:
                 if i.ext[0] not in point_visité:
-                    if i.fer > best_seg[0]:
-                        best_seg = (i.fer, i)
+                    if i.pher > best_seg[0]:
+                        best_seg = (i.pher, i)
         
                     
         best_chem.append(best_seg[1])
@@ -291,33 +290,55 @@ def best_chemin():
 def execute():
     global Points, Segments, nombre_points, listfourmis, fin
 
-    while True:
-            
-        generePoints(nombre_points)
+    iterations = 0
 
-        trouvevoisins(Points)
+    if mode_copie != 'copie':
+        while True:
 
-        if cherche_iles(Points):
-            break
-            
-        Points = []
-        Segments = []
+            generePoints(nombre_points)
+            iterations += 1
 
+            trouvevoisins(Points)
+
+
+            if cherche_iles(Points):
+                break
+
+            Points = []
+            Segments = []
+
+        """
+        for i in Points:
+            if Points[0] not in i.voisins: 
+                Points[0].voisins.pop(Points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
+        Points[0].voisins.pop(Points[0].voisins.index(Points[0]))
+
+        match iterations:
+            case 1 : print(f'{iterations} graphe a été généré.')
+            case n if n > 1: print(f'{iterations} graphes ont été générés.')
+        """
+
+    else:
+        copie_graphe([], [], 'copie', adresse)
+    print('copié')
         
     cree_fourmis(nombre_fourmis)
+    print('fourmis')
     
-    netoyer_segment()
+    nettoyer_segment()
+    print('nettoyé')
     
-    Segments_adjasents()
+    Segments_adjacents()
+    print('adjacents')
 
     #print(Points[0].seg)
     
     while fin:
         mouve_fourmis()
         for seg in Segments:
-            if seg.fer > 500:
+            if seg.pher > 500:
                 best_chemin()
-    
+   
     
         
     frame = 0
@@ -331,15 +352,15 @@ def execute():
             
         frame += 1
         Affiche(Points, Segments, listfourmis)
-         
+        
         if fin:    
             if frame % 1 == 0:
                 mouve_fourmis()
                 
                 if frame % 20 == 0:
                     for i in Segments:
-                        if i.fer > 10:
-                            i.fer -= 1
+                        if i.pher > 10:
+                            i.pher -= 1
                 
         pygame.display.flip()
         clock.tick(10)
@@ -355,16 +376,14 @@ def Affiche(points: list, segments: list, lisfourmis: list):
         
     screen.fill(couleur_fond)
     for fig in segments:
-        couleur = fig.fer
+        couleur = fig.pher
         if couleur > 255:
             couleur = 255
-            if fin:
-                best_chemin()
         pygame.draw.line(screen, (255, couleur, 0), fig.ext[0].pos, fig.ext[1].pos, 2)
     for fig in points:
         pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
         nomPoint = font.render(fig.nom, True, NOIR)
-        screen.blit(nomPoint, [fig.pos[0],fig.pos[1]])
+        screen.blit(nomPoint, [fig.pos[0]+fig.r,fig.pos[1]])
     for fig in listfourmis:
         pygame.draw.circle(screen, JAUNE, fig.pos, 3)
         
@@ -388,21 +407,21 @@ def trouvevoisins(Points: list):
     global Segments
     diagonale_plan = math.sqrt(taille[0]**2 + taille[1]**2)
     for i in Points:
-        voisin1 = Vertice(0, 0, diagonale_plan, 10)
-        voisin2 = Vertice(0, 0, diagonale_plan, 10)
-        voisin3 = Vertice(0, 0, diagonale_plan, 10)
+        voisin1 = Arete(0, 0, diagonale_plan, 10)
+        voisin2 = Arete(0, 0, diagonale_plan, 10)
+        voisin3 = Arete(0, 0, diagonale_plan, 10)
         for j in Points:
             if i != j:
                 hypotenuse = math.sqrt((i.pos[0] - j.pos[0])**2 + (i.pos[1] - j.pos[1])**2)
                 if hypotenuse < voisin1.long:
                     voisin3 = voisin2
                     voisin2 = voisin1
-                    voisin1 = Vertice(i, j, hypotenuse, 10)
+                    voisin1 = Arete(i, j, hypotenuse, 10)
                 elif hypotenuse < voisin2.long:
                     voisin3 = voisin2
-                    voisin2 = Vertice(i, j, hypotenuse, 10)
+                    voisin2 = Arete(i, j, hypotenuse, 10)
                 elif hypotenuse < voisin3.long:
-                    voisin3 = Vertice(i, j, hypotenuse, 10)
+                    voisin3 = Arete(i, j, hypotenuse, 10)
 
             
         présence1 = présence2 = présence3 = False
@@ -453,8 +472,47 @@ def cherche_iles(noeuds: list): # Vérifie si tous les points sont reliés. Choi
         return True
     else: return False
 
+def copie_graphe(liste_points: list, liste_aretes: list, mode: str, adresse = 'Graphe_File.csv'):    # mode: 'sauvegarde'/'copie'
 
-def netoyer_segment():
+    if mode == 'sauvegarde':
+        texte = []
+        for point in liste_points:
+            texte.append(['P', point.nom, point.pos, point.r, []])
+        for key in liste_aretes:
+            texte.append(['A', key.ext, key.long])
+
+        with open(adresse, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['SEP=,'])    # Permet d'ouvrir le fichier csv dans excel en séparant les données en colonnes
+            for row in texte:
+                writer.writerow(row)
+
+    elif mode == 'copie':
+        global Points, Segments, trajet
+
+        Points = []
+        Segments = []
+
+        with open(adresse, 'r') as f:
+            texte = list(csv.reader(f, delimiter=","))
+
+        index = 0
+        for line in texte:
+            match line[0]:
+                case 'P':
+                    Points.append(Noeud(line[1], eval(line[2])[0], eval(line[2])[1], int(line[3])+2, [], None))
+                    Points.pop()
+                    index = int(line[1].replace('P',''))
+                case 'A':
+                    ext = list(line[1][1:-1].split(', '))
+                    name = str(ext[0]) + '_' + str(ext[1])
+                    point_numbers = [int(ext[0].replace('P', '')), int(ext[1].replace('P', ''))]
+                    Segments.append(Arete(Points[point_numbers[0]], Points[point_numbers[1]], eval(line[2]), 10))
+                    Points[point_numbers[0]].voisins.append(Points[point_numbers[1]])
+                    Points[point_numbers[1]].voisins.append(Points[point_numbers[0]])
+    pass
+
+def nettoyer_segment():
     global Segments
     for i in Segments:
         for j in Segments:
@@ -462,7 +520,7 @@ def netoyer_segment():
                 Segments.remove(j)
 
 
-def Segments_adjasents():
+def Segments_adjacents():
     global Segments, Points
     for l in Points:
         for m in Segments:
@@ -477,7 +535,7 @@ def export_graphe(Graphe: list):  # Graphe = [Points, Segments]
         declaration = f'Noeud({point.nom}, {point.pos[0]}, {point.pos[1]}, {(point.r - 10)*4}, {point.voisins})'
         content += declaration + '\n'
     for segment in Graphe[1]:
-        declaration = f'Vertice({segment.ext[0]}, {segment.ext[1]}, {segment.long})'
+        declaration = f'Arete({segment.ext[0]}, {segment.ext[1]}, {segment.long})'
         content += declaration + '\n'
     with open('Graphe_File.txt', 'w') as file:
         file.write(content)
@@ -505,13 +563,15 @@ ORANGE = (199,95,48)
 Points = []
 Segments = []
 nombre_points = 100
-nombre_fourmis = 1000
+nombre_fourmis = 5000
 chem_possible = []
 fin = True
+mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
+adresse = 'Graphe100.csv'
 
 #-----Affichage-----
 
-taille = (1000, 600)
+taille = (1000, 700)
 
 
 #===Exécution===
