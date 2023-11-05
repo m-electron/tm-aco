@@ -1,7 +1,8 @@
 comment faire fonctionner "aco":
 Ce programme trouve le chemin le pus court entre 2 points grâce à l'algorithme de ant colony optimisation.
 Si on veut créer un graph aléatoire et trouver le chemin le plus court entre le premier et le dernier point, il faut que la variable mode_copie ne contienne pas "copier" (elle peut contenir par example "no copie").
-dans ce cas on peut changer le nomre de points créé, le nombre de fourmis et le nombre de pheromones requis pour arrêter le programme en modifiant les variables à la fin du code.
+dans ce cas on peut changer le nomre de points créé, le nombre de fourmis et le nombre de pheromones requis pour arrêter le programme en modifiant les variables à la fin du code, on peut aussi choisire d'afficher tout le processus avec l'animation ou bien directement la solution en mettant en commentaire le bout de code non shouêté dans execute().
+on peut aussi utiliser un 
 
 comment faire fonctionner "aco voyageur":
 "aco voyageur" est le code qui trouve des chemins pour le voyageur de commerce grace à un algorithe de ant colony optimisation.
