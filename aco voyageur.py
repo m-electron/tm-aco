@@ -135,9 +135,7 @@ def mouve_fourmis():
             Points[0].r = 5
             #print(len(i.p_visité))
             
-            if len(i.p_visité) == len(Points):              #code pour le voyageur de comerce
-                
-            #if i.point == Points[-1]:						#code pour le chemin le plus court
+            if len(i.p_visité) == len(Points):
                 
                 longeur_chemin = 0
                 somme_fer = 0
@@ -165,9 +163,7 @@ def mouve_fourmis():
                 somme_fer = 0
                 liste_segments = []
                 for j in i.point.seg:
-                    
-                    # bout de code pour le voyageur de commerce
-                    
+
                     if j.ext[0] == i.point:
                         if j.ext[1] not in i.p_visité:
                             somme_fer += j.fer
@@ -177,14 +173,7 @@ def mouve_fourmis():
                         if j.ext[0] not in i.p_visité:
                             somme_fer += j.fer
                             liste_segments.append((somme_fer, j))
-                    """    
-                    # bout de code pour trouver un chemin entre duex points
-                    
-                    if j not in i.chem:
-                        somme_fer += j.fer
-                        liste_segments.append((somme_fer, j))
-                    # fin du code pour le chemin le plus court
-                    """
+
                 nombre_alea = 0
                 nombre_alea = random.uniform(0, somme_fer - 1)
                 seg_emprunté = Segments[0]
@@ -240,36 +229,6 @@ def best_chemin():
     point_visité = [Points[0]]
     seg_emprunté = []
     longeur = 0
-    #code pour le chemin le plus court
-    """
-    while noeud != Points[-1]:
-        best_seg = (0, 0)
-    
-        for i in noeud.seg:
-            if i not in best_chem and i not in seg_emprunté:
-                if i.fer > best_seg[0]:
-                    best_seg = (i.fer, i)
-        
-        if best_seg == (0, 0):
-            noeud = best_chem[-2]
-            best_chem.pop()
-        
-        else:            
-            best_chem.append(best_seg[1])
-            
-            print(best_seg[1])
-            
-            if noeud == best_seg[1].ext[0]:
-                noeud = best_seg[1].ext[1]
-            else:
-                noeud = best_seg[1].ext[0]
-                
-        seg_emprunté.append(best_seg)
-            
-        if len(seg_emprunté) > 2:
-            seg_emprunté.remove(seg_emprunté[0])
-    """
-    #code pour le voyageur de commerce
     
     while len(point_visité) != len(Points):
         best_seg = (0, 0)
@@ -565,7 +524,7 @@ nombre_points = 20
 nombre_fourmis = 1000
 chem_possible = []
 fin = True
-nombre_iteration = 5
+nombre_iteration = 1
 
 #-----Affichage-----
 
