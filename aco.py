@@ -142,8 +142,7 @@ def mouve_fourmis():
                 for h in i.chem:
                     longeur_chemin += h.long
                 for h in i.chem:
-                    #h.pher += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
-                    h.pher += 1500 / longeur_chemin
+                    h.pher += 1500 / longeur_chemin        # modfier le nombre pour changer les feromones posé par les fourmis
                     somme_pher += h.pher
                 #print(longeur_chemin)
                 print(".")
