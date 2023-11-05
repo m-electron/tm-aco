@@ -1,2 +1,5 @@
-Ce document exlpique le fonctionnement du programme "aco première version".
+comment faire fonctionner "aco":
+
+comment faire fonctionner "aco voyageur":
+"aco voyageur" est le code qui trouve des chemins pour le voyageur de commerce grace à un algorithe de ant colony optimisation.
 
