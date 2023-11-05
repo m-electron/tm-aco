@@ -239,7 +239,7 @@ def best_chemin():
         else:            
             best_chem.append(best_seg[1])
             
-            print(best_seg[1])
+            #print(best_seg[1])
             
             if noeud == best_seg[1].ext[0]:
                 noeud = best_seg[1].ext[1]
@@ -256,7 +256,7 @@ def best_chemin():
 #-----Fonction d'exécution du programme-----
 
 def execute():
-    global Points, Segments, nombre_points, listfourmis, fin
+    global Points, Segments, nombre_points, listfourmis, fin, pheromones
 
     iterations = 0
 
@@ -293,7 +293,7 @@ def execute():
     while fin:
         mouve_fourmis()
         for seg in Segments:
-            if seg.pher > 500:
+            if seg.pher > pheromones:
                 best_chemin()
     #--------------------------------------------------------------
     
@@ -316,7 +316,7 @@ def execute():
             if frame % 1 == 0:
                 mouve_fourmis()
                 for seg in Segments:
-                    if seg.pher > 500:
+                    if seg.pher > pheromones:
                         best_chemin()
         """
         #---------------------------------------------------------
@@ -527,6 +527,7 @@ chem_possible = []
 fin = True
 mode_copie = 'mcopie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'Graphe100.csv'
+pheromones = 300
 
 #-----Affichage-----
 
