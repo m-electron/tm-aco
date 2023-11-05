@@ -3,4 +3,8 @@ comment faire fonctionner "aco":
 comment faire fonctionner "aco voyageur":
 "aco voyageur" est le code qui trouve des chemins pour le voyageur de commerce grace à un algorithe de ant colony optimisation.
 
-le code peut soit faire un affichage graphique, étape par étape, soit directement afficher la solution
+le code peut soit faire un affichage graphique, étape par étape, soit directement afficher la solution. Les deux bout de code sont dans execute() et il faut mettre en commentaire celui que on n'utilise pas.
+Si on affiche directement la solution, on peut changer le temps après lequel le programme s'arrête en modifiant la valeur de la variable temps et choisir le nombre de fois que le programe va s'executer sur le même graphe en changeant la variable iteration.
+Si on affiche le graphe avec l'animation des fourmis, on peut changer la quantité de pheromones qui arrêtera la programme en modifiant la variable pheromones
+
+il y a un bug majeur qui fait que souvent le programme ne donne aucune solution et malheureusement on n'aurra pas le temps de le régler. Nous vous prions donc de relancer le programme jusqu'à que ça marche.
