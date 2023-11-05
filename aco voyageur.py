@@ -145,9 +145,9 @@ def mouve_fourmis():
                     longeur_chemin += h.long
                 for h in i.chem:
                     #h.fer += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
-                    h.fer += 20000 / longeur_chemin / h.long
+                    h.fer += 110000 / longeur_chemin / h.long
                     somme_fer += h.fer
-                #print(longeur_chemin)
+                #print(somme_fer)
                 #print(".")
                 
 
@@ -352,20 +352,31 @@ def execute():
 
     #print(Points[0].seg)
     
-    #t0 = time.time()
-    
+    #code pour avoir directement la solution----------------
     for i in range(1, nombre_iteration):
         t0 = time.time()
         while fin:
             mouve_fourmis()
-            if time.time() - t0 > i:
+            if time.time() - t0 > 1:
                 best_chemin()
         print(i, "/"*10)
         
         if i != nombre_iteration - 1:
             reinitialisation()
-
-
+    #-------------------------------------------------------
+    """
+    chem_court = 10000
+    
+    for i in chem_possible:
+        long = 0
+        for j in i:
+            long += j.long
+        if long < chem_court:
+            chem_court = long
+    
+    print(chem_court)
+    """
+    
     frame = 0
     continuer = True
     cnt = 2
@@ -377,19 +388,18 @@ def execute():
             
         frame += 1
         Affiche(Points, Segments, listfourmis)
-         
+        
+        # code pour voir l'affichage --------------------------
+        """
         if fin:    
             if frame % 1 == 0:
                 mouve_fourmis()
                 for seg in Segments:
                     if seg.fer > 200:
                         best_chemin()
-                
-                if frame % 20 == 0:
-                    for i in Segments:
-                        if i.fer > 10:
-                            i.fer -= 1
-                
+        """
+        #---------------------------------------------------
+
         pygame.display.flip()
         clock.tick(10)
         cnt -= 1
@@ -551,11 +561,11 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
-nombre_points = 10
+nombre_points = 20
 nombre_fourmis = 1000
 chem_possible = []
 fin = True
-nombre_iteration = 10
+nombre_iteration = 5
 
 #-----Affichage-----
 
