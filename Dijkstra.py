@@ -47,7 +47,8 @@ class Graphe:
             for i in self.points:
                 if self.points[0] not in i.voisins: 
                     self.points[0].voisins.pop(self.points[0].voisins.index(i))   # On enlève tous les points pas voisins avec P0 de P0.voisins
-            self.points[0].voisins.pop(self.points[0].voisins.index(self.points[0]))
+            try: self.points[0].voisins.pop(self.points[0].voisins.index(self.points[0]))
+            except: pass
 
         match iterations:
             case 1 : print(f'{iterations} graphe a été généré.')
