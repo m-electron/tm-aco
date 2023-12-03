@@ -4,6 +4,7 @@ import pygame
 import math
 import random
 import csv
+pygame.init()
 
 #===Classes===
 
@@ -134,6 +135,7 @@ def mouve_fourmis():
             
             i.point.r -= 20 / nombre_fourmis 
             Points[0].r = 5
+            Points[-1].r = 5
                 
             if i.point == Points[-1]:						
                 
@@ -142,10 +144,11 @@ def mouve_fourmis():
                 for h in i.chem:
                     longeur_chemin += h.long
                 for h in i.chem:
-                    h.pher += 1500 / longeur_chemin        # modfier le nombre pour changer les feromones posé par les fourmis
+                    #h.pher += ((math.sqrt(taille[0]^2 + taille[1]^2) + 10000) / (0.1 * longeur_chemin * h.long))
+                    h.pher += 1500 / longeur_chemin
                     somme_pher += h.pher
                 #print(longeur_chemin)
-                print(".")
+                #print(".")
                 
 
                 if i.chem not in chem_possible:
@@ -180,7 +183,7 @@ def mouve_fourmis():
                         seg_emprunté = k[1]
                         break
                 
-                i.distance += int(seg_emprunté.long / 10)
+                i.distance += int(seg_emprunté.long / 2)
                 
                 if seg_emprunté.ext[0] == i.point:
                     if seg_emprunté.ext[1] == Points[0]:
@@ -188,7 +191,7 @@ def mouve_fourmis():
                         i.p_visité = []
                         
                     i.chem.append(seg_emprunté)
-                    i.pos = seg_emprunté.ext[1].pos
+                    #i.pos = seg_emprunté.ext[1].pos
                     i.point = seg_emprunté.ext[1]
                     i.p_visité.append(seg_emprunté.ext[1])
                     seg_emprunté.ext[1].r += 20 / nombre_fourmis
@@ -199,17 +202,18 @@ def mouve_fourmis():
                         i.p_visité = []
                         
                     i.chem.append(seg_emprunté)
-                    i.pos = seg_emprunté.ext[0].pos
+                    #i.pos = seg_emprunté.ext[0].pos
                     i.point = seg_emprunté.ext[0]
                     i.p_visité.append(seg_emprunté.ext[0])
                     seg_emprunté.ext[0].r += 20 / nombre_fourmis
                 
                 else:
-                    i.pos = Points[0].pos
+                    #i.pos = Points[0].pos
                     i.point = Points[0]
                     i.chem = []
                     i.p_visité = []
         else:
+            i.pos = (i.pos[0]+(i.point.pos[0]-i.pos[0])/i.distance + random.randint(-1, 1), i.pos[1]+(i.point.pos[1]-i.pos[1])/i.distance + random.randint(-1, 1))
             i.distance -= 1
 
 
@@ -251,6 +255,7 @@ def best_chemin():
             seg_emprunté.remove(seg_emprunté[0])
        
     print(best_chem)
+    print(Points[3].r)
     
 #-----Fonction d'exécution du programme-----
 
@@ -287,7 +292,7 @@ def execute():
     Segments_adjacents()
     print('adjacents')
 
-    #print(Points[0].seg) 
+    """
     #code pour aficher directement le résultat --------------------
     while fin:
         mouve_fourmis()
@@ -295,7 +300,7 @@ def execute():
             if seg.pher > pheromones:
                 best_chemin()
     #--------------------------------------------------------------
-    
+    """
         
     frame = 0
     continuer = True
@@ -310,18 +315,18 @@ def execute():
         Affiche(Points, Segments, listfourmis)
 
         # code pour voir l'affichage------------------------------
-        """
+        
         if fin:    
             if frame % 1 == 0:
                 mouve_fourmis()
                 for seg in Segments:
                     if seg.pher > pheromones:
                         best_chemin()
-        """
+        
         #---------------------------------------------------------
         
         pygame.display.flip()
-        clock.tick(10)
+        clock.tick(60)
         cnt -= 1
         
     pygame.quit()
@@ -329,7 +334,7 @@ def execute():
 #-----Affichage de Pygame sur l'ecran-----
 
 def Affiche(points: list, segments: list, lisfourmis: list):
-    global noeud1, best_chem #debug
+    global noeud1, best_chem, biscuit #debug
     couleur_fond = BLANC
         
     screen.fill(couleur_fond)
@@ -340,10 +345,12 @@ def Affiche(points: list, segments: list, lisfourmis: list):
         pygame.draw.line(screen, (255, couleur, 0), fig.ext[0].pos, fig.ext[1].pos, 2)
     for fig in points:
         pygame.draw.circle(screen, BLEU, fig.pos, fig.r)
+        #screen.blit(biscuit, fig.pos)
         nomPoint = font.render(fig.nom, True, NOIR)
         screen.blit(nomPoint, [fig.pos[0]+fig.r,fig.pos[1]])
     for fig in listfourmis:
-        pygame.draw.circle(screen, JAUNE, fig.pos, 3)
+        pygame.draw.circle(screen, NOIR, fig.pos, 3)
+        #screen.blit(ant, fig.pos)
         
     if not fin:
         for fig in best_chem:
@@ -521,8 +528,10 @@ ORANGE = (199,95,48)
 Points = []
 Segments = []
 nombre_points = 10
-nombre_fourmis = 500
+nombre_fourmis = 10
 chem_possible = []
+biscuit = pygame.image.load('biscuit.png')
+ant = pygame.image.load('ant.png')
 fin = True
 mode_copie = 'mcopie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'Graphe100.csv'
