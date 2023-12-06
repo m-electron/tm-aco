@@ -325,9 +325,14 @@ def execute():
         t0 = time.time()
         while fin:
             mouve_fourmis()
+            for seg in Segments:
+                if seg.fer > 100:
+                    best_chemin()
+            """
             if time.time() - t0 > 2:
                 best_chemin()
-        print(i, "/"*10)
+            """
+        print(i, "/"*10, time.time() - t0)
         
         if i != nombre_iteration - 1:
             reinitialisation()
@@ -557,12 +562,12 @@ ORANGE = (199,95,48)
 
 Points = []
 Segments = []
-nombre_points = 11
-nombre_fourmis = 10
+nombre_points = 10
+nombre_fourmis = 1000
 chem_possible = []
 fin = True
-nombre_iteration = 1
-mode_copie = 'copie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
+nombre_iteration = 2
+mode_copie = 'mcopie'    # 'copie' signifie que le graphe est copié depuis le fichier de sauvegarde du graphe
 adresse = 'Graphe10.csv'
 
 #-----Affichage-----
